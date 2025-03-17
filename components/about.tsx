@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import SectionHeading from "./section-heading";
-import { motion } from "framer-motion";
 import { useSectionInView } from "@/lib/hooks";
+import { motion } from "framer-motion";
+import SectionHeading from "./section-heading";
 
 export default function About() {
   const { ref } = useSectionInView("About");
@@ -19,21 +18,48 @@ export default function About() {
     >
       <SectionHeading>About me</SectionHeading>
       <p className="mb-3">
-        I started coding at an eary age which gave me time to explore{" "}
-        <span className="font-medium">Full stack developement</span>, I decided to pursue backend developement since I felt more comfortable doing it. I enrolled in a coding focused high school in my country where I can pursue my passion{" "}
+        I started coding at an early age, which gave me the opportunity to
+        explore <span className="font-medium">Full-Stack Development</span>.
+        Over time, I gravitated toward{" "}
+        <span className="font-medium">Backend Development</span>, where I found
+        my true passion for building scalable and efficient systems. I enrolled
+        in a coding-focused high school in my country, allowing me to deepen my
+        expertise in{" "}
+        <span className="font-medium">Node.js, Spring Boot, and AWS</span>.
+        Along the way, I’ve also gained experience with{" "}
+        <span className="font-medium">Microservices</span>,{" "}
+        <span className="font-medium">Serverless Architectures</span>, and{" "}
+        <span className="font-medium">Cloud Computing</span>.
+      </p>
+
+      <p className="mb-3">
+        Recently, I’ve been diving deep into the world of{" "}
+        <span className="font-medium">Large Language Models (LLMs)</span> and{" "}
+        <span className="font-medium">AI Agents</span>. I’ve worked on
+        integrating LLMs into{" "}
+        <span className="font-medium">voice applications</span> and optimizing{" "}
+        <span className="font-medium">Small Language Models (SLMs)</span> for
+        edge devices using <span className="font-medium">quantization</span>.
+        I’m particularly fascinated by{" "}
         <span className="font-medium">
-          Nodejs, Spring boot and AWS
+          Retrieval-Augmented Generation (RAG)
         </span>
-        . I am also familiar with technologies like <span className="font-medium">Microservices</span> and <span className="font-medium">Serverless</span>
+        , which enhances AI responses by reducing hallucinations and improving
+        factual accuracy. I love exploring how AI can create more{" "}
+        <span className="font-medium">
+          personalized, efficient, and engaging
+        </span>{" "}
+        digital experiences.
       </p>
 
       <p>
-        <span className="italic">When I'm not coding</span>, I enjoy playing
-        video games, watching movies, and surfing the iternet. I also enjoy{" "}
-        <span className="font-medium">learning new things</span>. I am currently
-        learning about{" "}
-        <span className="font-medium">game designing</span>. I'm also
-        learning how to dance.
+        <span className="italic">When I'm not coding</span>, you’ll likely find
+        me playing video games, listening to music, watching movies, or going
+        down internet rabbit holes. I have a strong curiosity for{" "}
+        <span className="font-medium">learning new things</span>, and right now,
+        I'm exploring <span className="font-medium">game design</span>—merging
+        my love for technology with creativity. I believe in staying positive
+        and embracing challenges as opportunities to grow.
       </p>
     </motion.section>
   );
