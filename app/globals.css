@@ -13,3 +13,12 @@ html.dark {
 .borderBlack {
   @apply border border-black/10;
 }
+
+.hidden-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+}

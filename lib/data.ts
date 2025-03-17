@@ -1,10 +1,10 @@
+import claireAiImg from "@/public/claireai.png";
+import libblioImg from "@/public/libblio.png";
+import telloImg from "@/public/tello.png";
+import quantaLedgerImg from "@/public/quantaledger.jpg";
 import React from "react";
 import { CgWorkAlt } from "react-icons/cg";
-import { FaReact } from "react-icons/fa";
 import { LuGraduationCap } from "react-icons/lu";
-import corpcommentImg from "@/public/libblio.png";
-import rmtdevImg from "@/public/rmtdev.png";
-import wordanalyticsImg from "@/public/wordanalytics.png";
 
 export const links = [
   {
@@ -50,14 +50,6 @@ export const experiencesData = [
     icon: React.createElement(CgWorkAlt),
     date: "2023 - 2024",
   },
-  // {
-  //   title: "Full-Stack Developer",
-  //   location: "Houston, TX",
-  //   description:
-  //     "I'm now a full-stack developer working as a freelancer. My stack includes React, Next.js, TypeScript, Tailwind, Prisma and MongoDB. I'm open to full-time opportunities.",
-  //   icon: React.createElement(FaReact),
-  //   date: "2021 - present",
-  // },
 ] as const;
 
 export const projectsData = [
@@ -65,50 +57,77 @@ export const projectsData = [
     title: "Libblio",
     description:
       "I worked on the backend of a robust library management system system that helped schools have digitalised libraries",
-    tags: ["Nodejs", "GraphQL", "Prisma"],
-    imageUrl: corpcommentImg,
+    tags: ["Nodejs", "GraphQL", "Prisma", "Sentry", "MySQL"],
+    imageUrl: libblioImg,
   },
-  // {
-  //   title: "rmtDev",
-  //   description:
-  //     "Job board for remote developer jobs. I was the front-end developer. It has features like filtering, sorting and pagination.",
-  //   tags: ["React", "TypeScript", "Next.js", "Tailwind", "Redux"],
-  //   imageUrl: rmtdevImg,
-  // },
-  // {
-  //   title: "Word Analytics",
-  //   description:
-  //     "A public web app for quick analytics on text. It shows word count, character count and social media post limits.",
-  //   tags: ["React", "Next.js", "SQL", "Tailwind", "Framer"],
-  //   imageUrl: wordanalyticsImg,
-  // },
+  {
+    title: "Claire AI",
+    description:
+      "I worked on an AI tutor project designed to help students learn faster through a more engaging and personalized experience. My work involved integrating large language models into voice applications and implementing Retrieval-Augmented Generation (RAG) to minimize hallucinations and ensure accurate, high-quality learning content.",
+    tags: ["RAG", "AI agents", "Langchain"],
+    imageUrl: claireAiImg,
+  },
+  {
+    title: "Quantaledger",
+    description:
+      "I worked on a project leveraging blockchain technology to enhance traceability in the supply chain. I implemented a private blockchain and integrated it with a Spring Boot backend, ensuring high performance and scalability.",
+    tags: ["Hyperledger Fabric", "Kafka", "Spring Boot", "Java", "Redis"],
+    imageUrl: quantaLedgerImg,
+  },
+  {
+    title: "Tello AI",
+    description:
+      "I worked on a project that leveraged Small Language Models (SLMs) to make interacting with USSD codes more convenient. The system processed voice and text inputs in natural language to determine the appropriate USSD codes for a given task. My role involved fine-tuning a small language model on USSD-related data and optimizing it for on-device execution using quantization.",
+    tags: ["Transformers", "Hugging face", "Unsloth", "SFT", "Llama.cpp"],
+    imageUrl: telloImg,
+  },
 ] as const;
 
 export const skillsData = [
-  "Nodejs",
-  "AWS",
-  "NestJs",
+  "Node.js",
+  "NestJS",
   "FastAPI",
   "Fastify",
   "Java",
-  "Spring boot",
+  "Spring Boot",
   "Go",
   "Gin",
-  "HTML",
-  "CSS",
-  "JavaScript",
+  "Python",
+  "Django",
   "TypeScript",
+  "JavaScript",
   "React",
   "Next.js",
-  "Node.js",
-  "Git",
+  "Expo",
+  "HTML",
+  "CSS",
   "Tailwind",
-  "Prisma",
-  "MongoDB",
   "GraphQL",
   "Apollo",
-  "Express",
   "PostgreSQL",
-  "Python",
-  "Django",,
+  "MongoDB",
+  "Prisma",
+  "Express",
+  "Git",
+  "AWS",
+  "Docker",
+  "Terraform",
+  "ArgoCD",
+  "Istio",
+  "Kubernetes",
+  "Blockchain",
+  "Smart Contracts",
+  "Ethereum",
+  "Hyperledger Fabric",
+  "Machine Learning",
+  "AI",
+  "Natural Language Processing (NLP)",
+  "Large Language Models (LLMs)",
+  "Retrieval-Augmented Generation (RAG)",
+  "Hugging Face",
+  "Quantization",
+  "Edge AI",
+  "Speech-to-Text",
+  "Fine Tuning"
 ] as const;
+
