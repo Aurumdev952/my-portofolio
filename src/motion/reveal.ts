@@ -106,6 +106,5 @@ export function useReveal(root: RefObject<HTMLElement | null>, deps: unknown[] =
       splits.forEach((s) => s.revert())
       ctx.revert()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }

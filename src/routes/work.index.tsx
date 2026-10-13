@@ -103,7 +103,6 @@ function Work() {
       if (index + d < projects.length && matches(index + d)) return go(index + d)
       if (index - d >= 0 && matches(index - d)) return go(index - d)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
 
   // open: the camera flies into the frame, then the doors close

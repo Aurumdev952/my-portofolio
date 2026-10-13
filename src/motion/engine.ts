@@ -100,7 +100,7 @@ export const getScroll = () => scrollState
 
 export function scrollTo(target: number | string | HTMLElement, opts: { immediate?: boolean; offset?: number } = {}) {
   if (lenis) {
-    lenis.scrollTo(target as never, { immediate: opts.immediate, offset: opts.offset ?? 0, duration: 1.6 })
+    lenis.scrollTo(target, { immediate: opts.immediate, offset: opts.offset ?? 0, duration: 1.6 })
     return
   }
   let y = 0
