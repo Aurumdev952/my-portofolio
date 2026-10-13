@@ -1,74 +1,48 @@
 // Blast doors: the loader and the page transition are the same object.
-import { gsap, prefersReducedMotion } from './engine'
+// They move with CSS transitions so they stay smooth on the compositor even while the main
+// thread is busy compiling shaders or hydrating the next page.
+import { prefersReducedMotion } from './engine'
 import { playIntro } from './reveal'
 
-const q = (sel: string) => document.querySelector<HTMLElement>(sel)
+const CLOSE_MS = 760
+const OPEN_MS = 900
 
-export function closeDoors(): Promise<void> {
-  const root = q('#loader')
-  if (!root) return Promise.resolve()
-  root.classList.remove('is-open')
-  root.hidden = false
-  root.style.pointerEvents = 'auto'
-  const l = q('.doors__leaf--l')
-  const r = q('.doors__leaf--r')
-  const seam = q('.doors__seam')
-  if (prefersReducedMotion()) {
-    return new Promise((done) => {
-      gsap.set([l, r], { xPercent: 0 })
-      gsap.fromTo(root, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'none', onComplete: () => done() })
-    })
-  }
-  gsap.set(root, { opacity: 1 })
-  return new Promise((done) => {
-    gsap
-      .timeline({ onComplete: () => done() })
-      .fromTo(l, { xPercent: -101 }, { xPercent: 0, duration: 0.75, ease: 'expo.inOut' }, 0)
-      .fromTo(r, { xPercent: 101 }, { xPercent: 0, duration: 0.75, ease: 'expo.inOut' }, 0)
-      .fromTo(seam, { opacity: 0, scaleY: 0.2 }, { opacity: 1, scaleY: 1, duration: 0.25, ease: 'power2.out' }, 0.62)
-  })
+const root = () => document.querySelector<HTMLElement>('#loader')
+const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+
+export async function closeDoors(): Promise<void> {
+  const el = root()
+  if (!el) return
+  el.hidden = false
+  el.dataset.mode = 'transition'
+  el.style.pointerEvents = 'auto'
+  await nextFrame()
+  el.dataset.state = 'closed'
+  await wait(prefersReducedMotion() ? 260 : CLOSE_MS)
 }
 
-export function openDoors(): Promise<void> {
-  const root = q('#loader')
-  if (!root) return Promise.resolve()
-  const l = q('.doors__leaf--l')
-  const r = q('.doors__leaf--r')
-  const seam = q('.doors__seam')
-  const hud = q('.doors__hud')
-  const finish = () => {
-    root.classList.add('is-open')
-    root.hidden = true
-    root.style.pointerEvents = 'none'
-    document.documentElement.classList.add('is-loaded')
+export async function openDoors(): Promise<void> {
+  const el = root()
+  if (!el) return
+  el.hidden = false
+  await nextFrame()
+  el.dataset.state = 'open'
+  el.style.pointerEvents = 'none'
+  document.documentElement.classList.add('is-loaded')
+  const reduced = prefersReducedMotion()
+  window.setTimeout(playIntro, reduced ? 0 : 340)
+  await wait(reduced ? 300 : OPEN_MS)
+  el.hidden = true
+}
+
+/** Pages other than the first home visit skip the loader entirely. */
+export function skipLoader() {
+  const el = root()
+  document.documentElement.classList.add('is-loaded')
+  if (el) {
+    el.dataset.state = 'open'
+    el.hidden = true
   }
-  if (prefersReducedMotion()) {
-    return new Promise((done) => {
-      gsap.to(root, {
-        opacity: 0,
-        duration: 0.3,
-        ease: 'none',
-        onComplete: () => {
-          finish()
-          playIntro()
-          done()
-        },
-      })
-    })
-  }
-  return new Promise((done) => {
-    gsap
-      .timeline({
-        onComplete: () => {
-          finish()
-          done()
-        },
-      })
-      .to(hud, { opacity: 0, duration: 0.25, ease: 'none' }, 0)
-      .to(seam, { opacity: 1, scaleY: 1, duration: 0.18, ease: 'power2.out' }, 0)
-      .to(seam, { opacity: 0, duration: 0.3, ease: 'none' }, 0.32)
-      .to(l, { xPercent: -101, duration: 0.85, ease: 'expo.inOut' }, 0.12)
-      .to(r, { xPercent: 101, duration: 0.85, ease: 'expo.inOut' }, 0.12)
-      .call(playIntro, [], 0.45)
-  })
+  playIntro()
 }

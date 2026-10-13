@@ -4,10 +4,14 @@ import * as THREE from 'three'
 import { stack } from '#/content/site'
 import { getLogo, logoSvg } from '#/content/logos'
 import { story } from '#/motion/story'
+import { isQA } from '#/motion/engine'
 import { sparks } from '../shared/Sparks'
+import { blankTexture } from '../shared/textures'
 
 export const CONVEYOR = { z: -8, y: 1.72, spacing: 1.3, size: 1.04 }
-export const stackItems = stack.flatMap((g) => g.items.map((it) => ({ ...it, group: g.label })))
+export const stackItems = stack.flatMap((g) =>
+  g.items.map((it) => ({ ...it, group: g.label })),
+)
 
 const CELL = 256
 const COLS = 8
@@ -118,14 +122,19 @@ export function Conveyor() {
   }, [])
 
   const tmp = useMemo(() => new THREE.Vector3(), [])
+  const qa = useMemo(() => isQA(), [])
 
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 1 / 30)
     const t = state.clock.elapsedTime
     const N = stackItems.length
-    const target = story.stack * (N - 1) * CONVEYOR.spacing
+    // Each plate dwells under the press, then the line moves on: scroll stamps the tools.
+    const r = story.stack * (N - 1)
+    const base = Math.floor(r)
+    const target = (base + THREE.MathUtils.smoothstep(r - base, 0.3, 0.7)) * CONVEYOR.spacing
     const prev = offset.current
     offset.current += (target - offset.current) * (1 - Math.exp(-dt * 5))
+    if (qa) offset.current = target
     const speed = (offset.current - prev) / Math.max(dt, 1e-3)
     let nearest = Infinity
     let nearestI = -1
@@ -136,7 +145,9 @@ export function Conveyor() {
       g.visible = Math.abs(x) < 9
       if (!g.visible) continue
       g.position.x = x
-      g.rotation.z = Math.sin(t * 1.3 + i) * 0.015 - THREE.MathUtils.clamp(speed * 0.02, -0.25, 0.25)
+      g.rotation.z =
+        Math.sin(t * 1.3 + i) * 0.015 -
+        THREE.MathUtils.clamp(speed * 0.02, -0.25, 0.25)
       if (Math.abs(x) < nearest) {
         nearest = Math.abs(x)
         nearestI = i
@@ -145,11 +156,13 @@ export function Conveyor() {
       const m = mats.current[i]
       if (m) m.emissiveIntensity = heat.current[i] * 1.6
     }
+    story.stackIndex = nearestI
     // press stamps the plate that settles under it
     const settle = 1 - THREE.MathUtils.smoothstep(nearest, 0.02, 0.4)
     const idle = 0.5 + 0.5 * Math.sin(t * 2.2)
     const drop = settle * (0.75 + 0.25 * idle)
-    if (press.current) press.current.position.y = CONVEYOR.y + 1.55 - drop * 0.42
+    if (press.current)
+      press.current.position.y = CONVEYOR.y + 1.55 - drop * 0.42
     if (nearestI >= 0 && nearest < 0.06 && lastCenter.current !== nearestI) {
       lastCenter.current = nearestI
       heat.current[nearestI] = 1
@@ -157,7 +170,11 @@ export function Conveyor() {
       sparks.emit(tmp, 70, new THREE.Vector3(0, 0.4, 1), 3.4)
     }
     if (settle > 0.9 && Math.random() < dt * 3) {
-      tmp.set((Math.random() - 0.5) * 0.4, CONVEYOR.y + CONVEYOR.size / 2, CONVEYOR.z + 0.06)
+      tmp.set(
+        (Math.random() - 0.5) * 0.4,
+        CONVEYOR.y + CONVEYOR.size / 2,
+        CONVEYOR.z + 0.06,
+      )
       sparks.emit(tmp, 6, new THREE.Vector3(0, 0.2, 1), 2)
     }
   })
@@ -167,59 +184,87 @@ export function Conveyor() {
       {/* overhead rail */}
       <mesh position={[0, CONVEYOR.y + 1.05, 0]}>
         <boxGeometry args={[40, 0.14, 0.22]} />
-        <meshStandardMaterial color="#1a1c20" metalness={0.85} roughness={0.35} />
+        <meshStandardMaterial
+          color="#1a1c20"
+          metalness={0.85}
+          roughness={0.35}
+        />
       </mesh>
       <mesh position={[0, CONVEYOR.y + 1.17, 0]}>
         <boxGeometry args={[40, 0.03, 0.08]} />
         <meshBasicMaterial color="#8a3a0c" toneMapped={false} />
       </mesh>
-      {atlas &&
-        stackItems.map((item, i) => (
-          <group
-            key={item.name + i}
-            ref={(el) => {
-              plates.current[i] = el
-            }}
-            position={[i * CONVEYOR.spacing, CONVEYOR.y, 0]}
-          >
-            <mesh geometry={geoms[i]}>
-              <meshStandardMaterial
-                ref={(m) => {
-                  if (m) mats.current[i] = m
-                }}
-                map={atlas}
-                metalness={0.55}
-                roughness={0.42}
-                emissive="#ff6a10"
-                emissiveIntensity={0}
-              />
-            </mesh>
-            <mesh position={[0, 0, -0.03]}>
-              <boxGeometry args={[CONVEYOR.size + 0.04, CONVEYOR.size + 0.04, 0.04]} />
-              <meshStandardMaterial color="#121316" metalness={0.8} roughness={0.4} />
-            </mesh>
-            <mesh position={[-0.3, CONVEYOR.size / 2 + 0.27, -0.02]}>
-              <boxGeometry args={[0.02, 0.56, 0.02]} />
-              <meshStandardMaterial color="#5c6068" metalness={1} roughness={0.3} />
-            </mesh>
-            <mesh position={[0.3, CONVEYOR.size / 2 + 0.27, -0.02]}>
-              <boxGeometry args={[0.02, 0.56, 0.02]} />
-              <meshStandardMaterial color="#5c6068" metalness={1} roughness={0.3} />
-            </mesh>
-          </group>
-        ))}
+      {stackItems.map((item, i) => (
+        <group
+          key={item.name + i}
+          ref={(el) => {
+            plates.current[i] = el
+          }}
+          position={[i * CONVEYOR.spacing, CONVEYOR.y, 0]}
+        >
+          <mesh geometry={geoms[i]}>
+            <meshStandardMaterial
+              ref={(m) => {
+                if (m) mats.current[i] = m
+              }}
+              map={atlas ?? blankTexture}
+              metalness={0.55}
+              roughness={0.42}
+              emissive="#ff6a10"
+              emissiveIntensity={0}
+            />
+          </mesh>
+          <mesh position={[0, 0, -0.03]}>
+            <boxGeometry
+              args={[CONVEYOR.size + 0.04, CONVEYOR.size + 0.04, 0.04]}
+            />
+            <meshStandardMaterial
+              color="#121316"
+              metalness={0.8}
+              roughness={0.4}
+            />
+          </mesh>
+          <mesh position={[-0.3, CONVEYOR.size / 2 + 0.27, -0.02]}>
+            <boxGeometry args={[0.02, 0.56, 0.02]} />
+            <meshStandardMaterial
+              color="#5c6068"
+              metalness={1}
+              roughness={0.3}
+            />
+          </mesh>
+          <mesh position={[0.3, CONVEYOR.size / 2 + 0.27, -0.02]}>
+            <boxGeometry args={[0.02, 0.56, 0.02]} />
+            <meshStandardMaterial
+              color="#5c6068"
+              metalness={1}
+              roughness={0.3}
+            />
+          </mesh>
+        </group>
+      ))}
       {/* stamping press */}
       <group ref={press} position={[0, CONVEYOR.y + 1.55, 0.42]}>
         <mesh>
           <boxGeometry args={[0.7, 0.32, 0.4]} />
-          <meshStandardMaterial color="#b84a12" metalness={0.4} roughness={0.45} />
+          <meshStandardMaterial
+            color="#23252a"
+            metalness={0.85}
+            roughness={0.35}
+          />
+        </mesh>
+        <mesh position={[0, -0.14, 0.201]}>
+          <planeGeometry args={[0.7, 0.03]} />
+          <meshBasicMaterial color="#ff7a1a" toneMapped={false} />
         </mesh>
         <mesh position={[0, 0.9, 0]}>
           <cylinderGeometry args={[0.07, 0.07, 1.6, 16]} />
-          <meshStandardMaterial color="#9aa0a8" metalness={1} roughness={0.18} />
+          <meshStandardMaterial
+            color="#9aa0a8"
+            metalness={1}
+            roughness={0.18}
+          />
         </mesh>
       </group>
-      <pointLight position={[0, CONVEYOR.y + 0.6, 1.6]} intensity={10} distance={6} color="#ffd2a1" />
     </group>
   )
 }

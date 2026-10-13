@@ -65,7 +65,8 @@ varying vec3 vLocal;
 varying float vDepth;
 void main(){
   vec4 tex = texture2D(uColor, vUv);
-  if (tex.a < 0.5) discard;
+  if (tex.a < 0.28) discard;
+  float edgeA = smoothstep(0.28, 0.72, tex.a);
   vec3 N = normalize(vN);
   vec3 V = normalize(vView);
   float ndv = max(dot(N, V), 0.);
@@ -129,8 +130,8 @@ void main(){
   float edge = 1. - smoothstep(0., .05, dn - cut);
   col += heatRamp(.8) * edge * step(.001, dis) * 2.2;
 
-  // soft alpha at mask edge
-  gl_FragColor = vec4(col, 1.);
+  // feathered silhouette edge
+  gl_FragColor = vec4(col, edgeA);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -228,6 +229,8 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
         vertexShader: MESH_VERT,
         fragmentShader: MESH_FRAG,
         side: THREE.DoubleSide,
+        transparent: true,
+        depthWrite: true,
       }),
     [uniforms],
   )

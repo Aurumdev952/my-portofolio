@@ -9,7 +9,7 @@ import { isMobile, isQA } from '#/motion/engine'
 import { loadTexture, projectCover } from '../shared/textures'
 import { Glow } from '../home/Hangar'
 
-export const GALLERY = { radius: 6.2, step: 0.46, y: 1.7 }
+export const GALLERY = { radius: 6.2, step: (Math.PI * 2) / projects.length, y: 1.7 }
 
 const FRAME_VERT = /* glsl */ `
 varying vec2 vUv;
@@ -20,6 +20,7 @@ uniform sampler2D uMap;
 uniform float uHas;
 uniform float uActive;
 uniform float uDim;
+uniform float uNear;
 uniform float uTime;
 uniform vec2 uAspect; // plane aspect / image aspect
 varying vec2 vUv;
@@ -31,10 +32,8 @@ void main(){
   float lum = dot(col, vec3(.299,.587,.114));
   // inactive frames read as cooled steel, the active one in full colour
   col = mix(vec3(lum) * vec3(.82,.88,1.), col, uActive);
-  col *= mix(.38, 1., uActive) * (1. - uDim * .8);
-  // heat seam sweeping across the active frame once it lands
-  float sweep = smoothstep(.0, .02, abs(vUv.x - fract(uTime * .12)) ) ;
-  col += vec3(1., .48, .1) * (1. - sweep) * uActive * .18;
+  // neighbours stay readable as shapes, frames further round the ring fall into the dark
+  col *= mix(mix(.05, .2, uNear), 1., uActive) * (1. - uDim * .8);
   float scan = .96 + .04 * sin(vUv.y * 700.);
   gl_FragColor = vec4(col * scan, 1.);
   #include <colorspace_fragment>
@@ -53,6 +52,7 @@ function Frame({ project, index }: { project: Project; index: number }) {
       uHas: { value: 0 },
       uActive: { value: 0 },
       uDim: { value: 0 },
+      uNear: { value: 0 },
       uTime: { value: 0 },
       uAspect: { value: new THREE.Vector2(1, 1) },
     }),
@@ -83,7 +83,10 @@ function Frame({ project, index }: { project: Project; index: number }) {
   useFrame((s, dt) => {
     const filter = useUI.getState().galleryFilter
     const match = filter === 'All' || project.kind.includes(filter as never)
-    const d = Math.abs(index - story.gSmooth)
+    const n = projects.length
+    const raw = Math.abs(index - story.gSmooth) % n
+    const d = Math.min(raw, n - raw)
+    uniforms.uNear.value = THREE.MathUtils.clamp(1.6 - d, 0, 1)
     const active = Math.max(0, 1 - d) * (match ? 1 : 0)
     uniforms.uActive.value += (active - uniforms.uActive.value) * (1 - Math.exp(-dt * 8))
     uniforms.uDim.value += ((match ? 0 : 1) - uniforms.uDim.value) * (1 - Math.exp(-dt * 6))

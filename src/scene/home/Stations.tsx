@@ -4,7 +4,7 @@ import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 import { featured } from '#/content/site'
 import type { Project } from '#/content/site'
-import { loadTexture, projectCover } from '../shared/textures'
+import { blankTexture, loadTexture, projectCover } from '../shared/textures'
 import { Glow } from './Hangar'
 
 export const STATION = {
@@ -39,7 +39,7 @@ function HoloScreen({ project }: { project: Project }) {
     <group position={[STATION.screen.x, STATION.screen.y, STATION.screen.z]} rotation={[0, -0.14, 0]}>
       <mesh>
         <planeGeometry args={[w, h]} />
-        <meshBasicMaterial ref={mat} map={tex ?? undefined} color={tex ? '#ffffff' : '#111317'} transparent toneMapped={false} />
+        <meshBasicMaterial ref={mat} map={tex ?? blankTexture} transparent toneMapped={false} />
       </mesh>
       {/* frame */}
       {[
