@@ -50,7 +50,6 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
     }
     gsap.ticker.add(tick)
     return () => gsap.ticker.remove(tick)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
