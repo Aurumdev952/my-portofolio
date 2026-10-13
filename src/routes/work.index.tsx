@@ -17,6 +17,7 @@ export const Route = createFileRoute('/work/')({
         content: 'Ten projects by Benjamin Ishimwe: ride hailing, AI tutoring, national public sector systems, data pipelines and small language models.',
       },
       { property: 'og:title', content: `Work · ${site.name}` },
+      { property: 'og:description', content: 'Ride hailing, AI tutoring, public sector systems, data pipelines and small language models, in one 3D gallery.' },
       { property: 'og:url', content: `${site.url}/work` },
     ],
     links: [{ rel: 'canonical', href: `${site.url}/work` }],
@@ -161,7 +162,7 @@ function Work() {
                 {String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')} · {p.period}
               </p>
               <h2 className="display mt-3 text-[clamp(36px,4.4vw,72px)]">{p.title}</h2>
-              <p className="mt-3 max-w-[44ch] text-[17px] text-[var(--ink)]/85">{p.summary}</p>
+              <p className="mt-3 hidden max-w-[44ch] text-[17px] text-[var(--ink)]/85 sm:block">{p.summary}</p>
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 <a
                   href={`/work/${p.slug}`}
@@ -177,10 +178,18 @@ function Work() {
                     →
                   </span>
                 </a>
-                <span className="mono hidden text-[var(--muted)] md:inline">Scroll, or use the arrow keys</span>
+                <span className="flex gap-2">
+                  <button type="button" className="heat !min-h-[48px] !px-4" onClick={() => step(-1)} aria-label="Previous project">
+                    <span className="heat__label" aria-hidden="true">←</span>
+                  </button>
+                  <button type="button" className="heat !min-h-[48px] !px-4" onClick={() => step(1)} aria-label="Next project">
+                    <span className="heat__label" aria-hidden="true">→</span>
+                  </button>
+                </span>
+                <span className="mono hidden text-[var(--muted)] lg:inline">Scroll, or use the arrow keys</span>
               </div>
             </div>
-            <nav aria-label="All projects" className="md:col-span-4 md:col-start-9">
+            <nav aria-label="All projects" className="hidden md:col-span-3 md:col-start-10 md:block">
               <ol className="grid gap-0.5">
                 {projects.map((q, i) => (
                   <li key={q.slug} className={matches(i) ? '' : 'opacity-30'}>

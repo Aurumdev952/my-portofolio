@@ -16,7 +16,7 @@ const Stage = lazy(() => import('#/scene/Stage'))
 
 // Runs before first paint: flags JS + motion so hidden-before-reveal styles never flash, and
 // a safety net reveals everything if the app never boots.
-const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('motion');setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('doors');if(x)x.style.display='none'}},6000)})();`
+const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('motion');setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
 
 const personJsonLd = {
   '@context': 'https://schema.org',

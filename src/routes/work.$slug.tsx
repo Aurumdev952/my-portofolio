@@ -73,7 +73,7 @@ function CaseStudy() {
             <div>
               <dt className="text-[var(--muted)]">Live</dt>
               <dd>
-                <a className="link text-[var(--ink)]" href={p.link.href} target="_blank" rel="noreferrer">
+                <a className="link inline-flex min-h-[28px] items-center text-[var(--ink)]" href={p.link.href} target="_blank" rel="noopener noreferrer">
                   {p.link.label}
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
@@ -97,6 +97,21 @@ function CaseStudy() {
           {p.image ? `${p.title}, public site` : 'System view. The real screens are private, this is how the system fits together.'}
         </figcaption>
       </figure>
+
+      {p.image?.mobile && (
+        <figure className="mt-10 grid items-end gap-6 md:grid-cols-12" data-reveal="up">
+          <img
+            src={p.image.mobile}
+            alt={`${p.title} on a phone`}
+            width={780}
+            height={1688}
+            loading="lazy"
+            decoding="async"
+            className="w-full max-w-[300px] border border-[var(--line)] md:col-span-3"
+          />
+          <figcaption className="mono text-[var(--muted)] md:col-span-4">The same site on a 390 px phone screen.</figcaption>
+        </figure>
+      )}
 
       <div className="mt-24 grid gap-16 md:grid-cols-12">
         <section className="md:col-span-4" aria-labelledby="ctx">

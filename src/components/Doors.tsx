@@ -3,8 +3,8 @@ import { gsap, prefersReducedMotion } from '#/motion/engine'
 import { openDoors } from '#/motion/doors'
 import { useUI } from '#/motion/story'
 
-const MIN_MS = 1100
-const MAX_MS = 2300
+const MIN_MS = 900
+const MAX_MS = 1600
 
 /** Loader. Progress is real: fonts, the portrait textures and the 3D scene. */
 export function Doors({ waitForGl }: { waitForGl: boolean }) {
@@ -54,7 +54,7 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
   }, [])
 
   return (
-    <div id="doors" className="doors" aria-hidden="true">
+    <div id="loader" className="doors" aria-hidden="true">
       <div className="doors__leaf doors__leaf--l" />
       <div className="doors__leaf doors__leaf--r" />
       <div className="doors__seam" />

@@ -29,11 +29,11 @@ export function Frame() {
   return (
     <>
       <header className="frame-corner frame-corner--top left-0 right-0 top-0 flex items-start justify-between px-[var(--gutter)] pt-4 mix-blend-difference">
-        <ForgeLink to="/" className="draw gap-3 text-[15px] font-semibold tracking-tight" aria-label={`${site.name}, home`}>
+        <ForgeLink to="/" className="draw gap-3 text-[15px] font-semibold tracking-tight">
           <span className="display text-[22px] leading-none" style={{ fontStretch: '62%' }}>
             {site.initials}
           </span>
-          <span className="hidden sm:inline">{site.name}</span>
+          <span className="sr-only sm:not-sr-only">{site.name}</span>
         </ForgeLink>
         <nav aria-label="Main">
           <ul className="flex gap-5 text-[15px] font-medium sm:gap-8">

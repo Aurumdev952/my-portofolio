@@ -122,7 +122,7 @@ void main(){
   vec3 col = (sil * wSil + bp * wBp + spark * wSpark + hot * wHot + real * wReal) / sum;
 
   // Dissolve with a burning edge (spark phase and teleports)
-  float dis = max(uDissolve, wSpark * .58);
+  float dis = max(uDissolve, wSpark * .42);
   float dn = fbm(vec3(vLocal.xy * 6., 3.1)) * .9 + vUv.y * .1;
   float cut = dis * 1.08 - .02;
   if (dn < cut) discard;
@@ -160,7 +160,7 @@ void main(){
   float flick = .6 + .4 * sin(uTime * 14. + aSeed * 40.);
   vAlpha = vis * flick;
   vTemp = .55 + h.z * .7;
-  gl_PointSize = uPixel * (1.2 + h.y * 2.) * (3. / -mv.z) * (0.6 + amt);
+  gl_PointSize = uPixel * (1.2 + h.y * 2.) * (8. / -mv.z) * (0.7 + amt);
 }
 `
 

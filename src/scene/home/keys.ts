@@ -13,6 +13,9 @@ export type Key = {
   forge: number
   /** control point for the camera path that arrives at this key */
   via?: V3
+  /** phones: pull the camera back by this factor (default 1.5) and slide the aim sideways */
+  mZoom?: number
+  mDx?: number
 }
 
 const PLATFORM: Placement = { id: 'platform', pos: [0, 0.55, 0], scale: 1 }
@@ -67,6 +70,8 @@ export const KEYS: Key[] = [
     fig: station(i),
     forge: 1,
     via: i === 0 ? ([-7, 4.4, -6.2] as V3) : undefined,
+    mZoom: 1.75,
+    mDx: -0.55,
   })),
   {
     name: `${pad(chapters.length + 3 + featured.length)} Contact`,
@@ -79,8 +84,8 @@ export const KEYS: Key[] = [
   },
   {
     name: `${pad(chapters.length + 4 + featured.length)} The gate`,
-    cam: [0, 1.8, -22.4],
-    tgt: [0, 2.3, -30],
+    cam: [0, 1.45, -22.4],
+    tgt: [0, 1.35, -30],
     shift: 0,
     fig: GATE,
     forge: 1,

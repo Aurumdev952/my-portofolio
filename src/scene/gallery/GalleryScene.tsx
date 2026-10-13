@@ -128,6 +128,7 @@ export function GalleryScene({ quality, onReady }: { quality: 'high' | 'low'; on
   }, [size])
   useEffect(() => {
     onReady()
+    useUI.getState().setLabel('')
   }, [onReady])
 
   useFrame((state, rawDt) => {
@@ -143,10 +144,10 @@ export function GalleryScene({ quality, onReady }: { quality: 'high' | 'low'; on
       GALLERY.y + 0.05 - story.py * 0.1,
       back - fly * (GALLERY.radius + back - 2.0),
     )
-    camera.lookAt(0, GALLERY.y - (mobile.current ? 0.35 : 0), -GALLERY.radius)
+    camera.lookAt(0, GALLERY.y + (mobile.current ? 0.05 : 0), -GALLERY.radius)
     const w = state.size.width
     const h = state.size.height
-    camera.setViewOffset(w, h, mobile.current ? 0 : -0.08 * w, 0, w, h)
+    camera.setViewOffset(w, h, 0, 0, w, h)
   })
 
   return (
