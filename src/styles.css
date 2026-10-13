@@ -1,0 +1,363 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo-100_900-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-400-normal.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --color-ground: #0b0c0e;
+  --color-ink: #eceae4;
+  --color-muted: #9a9da3;
+  --color-heat: #ff7a1a;
+  --color-arc: #bfd9ff;
+  --color-curtain: #141518;
+}
+
+:root {
+  --ground: #0b0c0e;
+  --ink: #eceae4;
+  --muted: #9a9da3;
+  --line: rgba(236, 234, 228, 0.13);
+  --heat: #ff7a1a;
+  --heat-soft: #ffb46b;
+  --arc: #bfd9ff;
+  --curtain: #141518;
+  --gutter: clamp(16px, 2.2vw, 32px);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+html {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--display);
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+body {
+  background: var(--ground);
+  font-size: 17px;
+  line-height: 1.55;
+  min-height: 100svh;
+  overflow-x: clip;
+}
+::selection {
+  background: var(--heat);
+  color: var(--ground);
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- type ---------- */
+.display {
+  font-family: var(--display);
+  font-weight: 820;
+  font-stretch: 72%;
+  letter-spacing: -0.03em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+.mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.lede {
+  font-size: clamp(17px, 1.35vw, 21px);
+  line-height: 1.5;
+  max-width: 34ch;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- focus ---------- */
+:focus-visible {
+  outline: 2px solid var(--heat);
+  outline-offset: 3px;
+}
+.skip-link {
+  position: fixed;
+  left: var(--gutter);
+  top: 12px;
+  z-index: 200;
+  padding: 10px 14px;
+  background: var(--ink);
+  color: var(--ground);
+  font-weight: 600;
+  translate: 0 -200%;
+}
+.skip-link:focus-visible {
+  translate: 0 0;
+}
+
+/* ---------- links and buttons: one treatment per role ---------- */
+/* Primary: heat. A molten bar fills from the left, label nudges. */
+.heat {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--line);
+  background: rgba(20, 21, 24, 0.72);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  overflow: clip;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  transition: color 0.35s var(--ease-soft), border-color 0.35s var(--ease-soft);
+  cursor: pointer;
+}
+.heat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #ff5a0a, var(--heat) 55%, var(--heat-soft));
+  scale: 0 1;
+  transform-origin: left center;
+  transition: scale 0.5s var(--ease-out);
+}
+.heat > .heat__label {
+  transition: translate 0.45s var(--ease-out);
+}
+.heat > .heat__arrow {
+  transition: translate 0.45s var(--ease-out);
+}
+@media (hover: hover) {
+  .heat:hover {
+    color: #120a04;
+    border-color: var(--heat);
+  }
+  .heat:hover::before {
+    scale: 1 1;
+  }
+  .heat:hover > .heat__label {
+    translate: 4px 0;
+  }
+  .heat:hover > .heat__arrow {
+    translate: 6px 0;
+  }
+}
+.heat:focus-visible {
+  color: #120a04;
+  border-color: var(--heat);
+}
+.heat:focus-visible::before,
+.heat:active::before {
+  scale: 1 1;
+}
+.heat:active {
+  color: #120a04;
+}
+
+/* Nav: underline draws in heat, current page keeps it */
+.draw {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  background: linear-gradient(var(--heat) 0 0) left calc(100% - 6px) / 0% 2px no-repeat;
+  transition: background-size 0.45s var(--ease-out), color 0.3s;
+}
+@media (hover: hover) {
+  .draw:hover {
+    background-size: 100% 2px;
+  }
+}
+.draw:focus-visible,
+.draw[aria-current='page'],
+.draw.is-active {
+  background-size: 100% 2px;
+}
+
+/* Inline text links: underline at rest, rises into a heat band */
+.link {
+  background: linear-gradient(var(--heat) 0 0) left bottom / 100% 1px no-repeat;
+  transition: background-size 0.4s var(--ease-out), color 0.3s;
+}
+@media (hover: hover) {
+  .link:hover {
+    background-size: 100% 100%;
+    color: #120a04;
+  }
+}
+.link:focus-visible {
+  background-size: 100% 100%;
+  color: #120a04;
+}
+
+/* Utility links: colour only */
+.util {
+  color: var(--muted);
+  transition: color 0.25s;
+}
+@media (hover: hover) {
+  .util:hover {
+    color: var(--ink);
+  }
+}
+.util:focus-visible {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heat,
+  .heat::before,
+  .heat > *,
+  .draw,
+  .link {
+    transition: none !important;
+  }
+  .heat > .heat__label,
+  .heat > .heat__arrow {
+    translate: none !important;
+  }
+}
+
+/* ---------- plates (cut steel panels) ---------- */
+.plate {
+  position: relative;
+  background: linear-gradient(180deg, rgba(24, 25, 29, 0.86), rgba(14, 15, 18, 0.86));
+  border: 1px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.scrim-l {
+  background: linear-gradient(90deg, rgba(11, 12, 14, 0.86) 0%, rgba(11, 12, 14, 0.55) 55%, rgba(11, 12, 14, 0) 100%);
+}
+
+/* ---------- frame (corner UI) ---------- */
+.frame-corner {
+  position: fixed;
+  z-index: 60;
+  transition: translate 0.6s var(--ease-out), opacity 0.4s;
+}
+html.frame-away .frame-corner--top {
+  translate: 0 -160%;
+}
+html.frame-away .frame-corner--bottom {
+  translate: 0 160%;
+}
+
+/* ---------- doors (loader + page transition) ---------- */
+.doors {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  display: none;
+}
+html.js .doors {
+  display: block;
+}
+.doors__leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 120px),
+    linear-gradient(180deg, #17181c, #0f1013);
+}
+.doors__leaf--l {
+  left: 0;
+  border-right: 1px solid rgba(255, 122, 26, 0.0);
+}
+.doors__leaf--r {
+  right: 0;
+}
+.doors__seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: linear-gradient(180deg, transparent, var(--heat) 20%, #fff2d6 50%, var(--heat) 80%, transparent);
+  box-shadow: 0 0 24px 4px rgba(255, 122, 26, 0.55);
+  opacity: 0;
+}
+.doors.is-open {
+  visibility: hidden;
+}
+
+/* ---------- reveal gating: hidden only when motion is on ---------- */
+html.motion [data-reveal],
+html.motion [data-split] {
+  opacity: 0;
+}
+html.motion.is-revealed-all [data-reveal] {
+  opacity: 1;
+}
+.split-line-mask {
+  padding: 0.14em 0 0.08em;
+  margin: -0.14em 0 -0.08em;
+}
+
+/* ---------- no GL fallbacks ---------- */
+.gl-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+html:not(.gl-try) .gl-only {
+  display: none !important;
+}
+html.gl-try .nogl-only {
+  display: none !important;
+}
+.gl-canvas {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+html.gl-on .gl-canvas {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
