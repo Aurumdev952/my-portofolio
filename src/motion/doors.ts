@@ -5,9 +5,10 @@ import { playIntro } from './reveal'
 const q = (sel: string) => document.querySelector<HTMLElement>(sel)
 
 export function closeDoors(): Promise<void> {
-  const root = q('#doors')
+  const root = q('#loader')
   if (!root) return Promise.resolve()
   root.classList.remove('is-open')
+  root.hidden = false
   root.style.pointerEvents = 'auto'
   const l = q('.doors__leaf--l')
   const r = q('.doors__leaf--r')
@@ -29,7 +30,7 @@ export function closeDoors(): Promise<void> {
 }
 
 export function openDoors(): Promise<void> {
-  const root = q('#doors')
+  const root = q('#loader')
   if (!root) return Promise.resolve()
   const l = q('.doors__leaf--l')
   const r = q('.doors__leaf--r')
@@ -37,6 +38,7 @@ export function openDoors(): Promise<void> {
   const hud = q('.doors__hud')
   const finish = () => {
     root.classList.add('is-open')
+    root.hidden = true
     root.style.pointerEvents = 'none'
     document.documentElement.classList.add('is-loaded')
   }
@@ -65,8 +67,8 @@ export function openDoors(): Promise<void> {
       .to(hud, { opacity: 0, duration: 0.25, ease: 'none' }, 0)
       .to(seam, { opacity: 1, scaleY: 1, duration: 0.18, ease: 'power2.out' }, 0)
       .to(seam, { opacity: 0, duration: 0.3, ease: 'none' }, 0.32)
-      .to(l, { xPercent: -101, duration: 0.95, ease: 'expo.inOut' }, 0.2)
-      .to(r, { xPercent: 101, duration: 0.95, ease: 'expo.inOut' }, 0.2)
-      .call(playIntro, [], 0.6)
+      .to(l, { xPercent: -101, duration: 0.85, ease: 'expo.inOut' }, 0.12)
+      .to(r, { xPercent: 101, duration: 0.85, ease: 'expo.inOut' }, 0.12)
+      .call(playIntro, [], 0.45)
   })
 }

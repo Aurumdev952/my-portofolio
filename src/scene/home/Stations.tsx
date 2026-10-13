@@ -361,7 +361,7 @@ function GateProp() {
     })
   })
   return (
-    <group position={[0.1, 0, 0]}>
+    <group position={[0.85, 0, 1.0]} scale={0.6}>
       {[-0.05, 1.05].map((x) => (
         <mesh key={x} position={[x, 0.9, 0.75]} material={steelMat}>
           <boxGeometry args={[0.12, 1.8, 0.2]} />

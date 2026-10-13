@@ -45,7 +45,7 @@ function Structure() {
     const m = new THREE.Matrix4()
     let i = 0
     for (const z of zs) {
-      for (const x of [-11, 11]) {
+      for (const x of [-21, 21]) {
         m.makeTranslation(x, 6, z)
         cols.current!.setMatrixAt(i++, m)
       }
@@ -59,7 +59,7 @@ function Structure() {
     beams.current!.instanceMatrix.needsUpdate = true
     i = 0
     for (const z of zs) {
-      for (const x of [-4.5, 4.5]) {
+      for (const x of [-12, -4.5, 4.5, 12]) {
         m.makeTranslation(x, 11.1, z - 3)
         lamps.current!.setMatrixAt(i++, m)
       }
@@ -72,9 +72,9 @@ function Structure() {
         <boxGeometry args={[0.6, 12, 0.6]} />
       </instancedMesh>
       <instancedMesh ref={beams} args={[undefined, darkSteel, zs.length]}>
-        <boxGeometry args={[22.6, 0.5, 0.4]} />
+        <boxGeometry args={[42.6, 0.5, 0.4]} />
       </instancedMesh>
-      <instancedMesh ref={lamps} args={[undefined, undefined, zs.length * 2]}>
+      <instancedMesh ref={lamps} args={[undefined, undefined, zs.length * 4]}>
         <boxGeometry args={[2.2, 0.06, 0.3]} />
         <meshBasicMaterial color="#cfe0ff" toneMapped={false} />
       </instancedMesh>
@@ -173,7 +173,7 @@ function Dust({ count }: { count: number }) {
   const { geom, mat } = useMemo(() => {
     const pos = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 20
+      pos[i * 3] = (Math.random() - 0.5) * 38
       pos[i * 3 + 1] = Math.random() * 8
       pos[i * 3 + 2] = 8 - Math.random() * 42
     }
@@ -213,12 +213,14 @@ function Dust({ count }: { count: number }) {
 function Gate() {
   const left = useRef<THREE.Mesh>(null)
   const right = useRef<THREE.Mesh>(null)
-  const light = useRef<THREE.MeshBasicMaterial>(null)
-  useFrame(() => {
+  const beyond = useRef<THREE.Group>(null)
+  const edgeMat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#ff7a1a', transparent: true, opacity: 0, toneMapped: false }), [])
+  useFrame((s) => {
     const g = THREE.MathUtils.smoothstep(story.gate, 0.05, 0.95)
     if (left.current) left.current.position.x = -3.55 - g * 6.6
     if (right.current) right.current.position.x = 3.55 + g * 6.6
-    if (light.current) light.current.opacity = 0.12 + g * 0.38
+    edgeMat.opacity = g
+    if (beyond.current) beyond.current.rotation.y = Math.sin(s.clock.elapsedTime * 0.1) * 0.05
   })
   const leafMat = useMemo(() => {
     const c = document.createElement('canvas')
@@ -237,11 +239,34 @@ function Gate() {
   }, [])
   return (
     <group position={[0, 0, -32]}>
-      <mesh position={[0, 5, -0.6]}>
-        <planeGeometry args={[14, 10]} />
-        <meshBasicMaterial ref={light} color="#7f97c0" transparent toneMapped={false} />
-      </mesh>
-      <Glow position={[0, 3.2, -0.4]} scale={[16, 9]} color="#bfd9ff" opacity={0.35} />
+      {/* a glimpse of the gallery beyond the doors */}
+      <group ref={beyond} position={[0, 0, -9]}>
+        {Array.from({ length: 7 }).map((_, i) => {
+          const a = (i - 3) * 0.42
+          return (
+            <group key={i} position={[Math.sin(a) * 6, 1.9, Math.cos(a) * -6 + 6]} rotation={[0, -a, 0]}>
+              <mesh>
+                <planeGeometry args={[2.4, 1.5]} />
+                <meshBasicMaterial color={i === 3 ? '#8aa3cf' : '#3d4d6b'} toneMapped={false} />
+              </mesh>
+              <mesh position={[0, -0.8, 0.01]}>
+                <planeGeometry args={[2.4, 0.02]} />
+                <meshBasicMaterial color={i === 3 ? '#ff7a1a' : '#5c6a80'} toneMapped={false} />
+              </mesh>
+            </group>
+          )
+        })}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+          <ringGeometry args={[5.2, 5.24, 128]} />
+          <meshBasicMaterial color="#bfd9ff" toneMapped={false} />
+        </mesh>
+      </group>
+      <Glow position={[0, 1.2, -1]} scale={[16, 4]} color="#bfd9ff" opacity={0.16} />
+      {[-7.15, 7.15].map((x) => (
+        <mesh key={x} position={[x, 4.6, 0.2]} material={edgeMat}>
+          <boxGeometry args={[0.06, 9.2, 0.06]} />
+        </mesh>
+      ))}
       <mesh ref={left} position={[-3.55, 4.6, 0]} material={leafMat}>
         <boxGeometry args={[7.1, 9.2, 0.3]} />
       </mesh>
@@ -263,7 +288,7 @@ export function Hangar({ quality }: { quality: 'high' | 'low' }) {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -12]}>
-        <planeGeometry args={[60, 70]} />
+        <planeGeometry args={[46, 70]} />
         {quality === 'high' ? (
           <MeshReflectorMaterial
             map={floorMap}
@@ -285,14 +310,20 @@ export function Hangar({ quality }: { quality: 'high' | 'low' }) {
       </mesh>
       {/* back wall + slit of light behind the forge */}
       <mesh position={[0, 6, 14]} rotation={[0, Math.PI, 0]} material={darkSteel}>
-        <planeGeometry args={[24, 12]} />
+        <planeGeometry args={[44, 12]} />
       </mesh>
-      <mesh position={[-11.6, 6, -12]} rotation={[0, Math.PI / 2, 0]} material={darkSteel}>
+      <mesh position={[-21.6, 6, -12]} rotation={[0, Math.PI / 2, 0]} material={darkSteel}>
         <planeGeometry args={[70, 12]} />
       </mesh>
-      <mesh position={[11.6, 6, -12]} rotation={[0, -Math.PI / 2, 0]} material={darkSteel}>
+      <mesh position={[21.6, 6, -12]} rotation={[0, -Math.PI / 2, 0]} material={darkSteel}>
         <planeGeometry args={[70, 12]} />
       </mesh>
+      {/* end wall around the gate */}
+      {[-14.4, 14.4].map((x) => (
+        <mesh key={x} position={[x, 6, -32.2]} material={darkSteel}>
+          <planeGeometry args={[14.6, 12]} />
+        </mesh>
+      ))}
       <Structure />
       <Gate />
       <Dust count={quality === 'high' ? 900 : 380} />

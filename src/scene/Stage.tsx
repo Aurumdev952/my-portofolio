@@ -45,7 +45,10 @@ function Pointer() {
 }
 
 function Ambient({ onReady }: { onReady: () => void }) {
-  useEffect(() => onReady(), [onReady])
+  useEffect(() => {
+    onReady()
+    useUI.getState().setLabel('')
+  }, [onReady])
   const camera = useThree((s) => s.camera)
   useFrame((s) => {
     const t = s.clock.elapsedTime

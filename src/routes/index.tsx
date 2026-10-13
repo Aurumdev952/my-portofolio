@@ -75,21 +75,21 @@ function Chapters() {
         const right = i % 2 === 1
         return (
           <section key={c.id} data-key={i + 1} aria-labelledby={`ch-${c.id}`} className="relative h-[150svh]">
-            <div className={`sticky top-[18svh] flex px-[var(--gutter)] ${right ? 'justify-end' : 'justify-start'}`}>
-              <article className="plate w-full max-w-[470px] p-6 sm:p-8">
+            <div className={`sticky top-[47svh] flex px-[var(--gutter)] md:top-[18svh] ${right ? 'justify-end' : 'justify-start'}`}>
+              <article className="plate w-full max-w-[470px] p-5 sm:p-8">
                 <p className="mono flex items-center justify-between text-[var(--heat)]">
                   <span>{c.year}</span>
                   <span className="text-[var(--muted)]">
                     {String(i + 1).padStart(2, '0')} / {String(chapters.length).padStart(2, '0')}
                   </span>
                 </p>
-                <h3 id={`ch-${c.id}`} className="display mt-5 text-[clamp(40px,4.6vw,72px)]" data-split>
+                <h3 id={`ch-${c.id}`} className="display mt-3 text-[clamp(34px,4.6vw,72px)] sm:mt-5" data-split>
                   {c.title}
                 </h3>
-                <p className="mt-5 text-[17px] text-[var(--ink)]/90" data-reveal="up">
+                <p className="mt-3 text-[16px] text-[var(--ink)]/90 sm:mt-5 sm:text-[17px]" data-reveal="up">
                   {c.body}
                 </p>
-                <ul className="mono mt-6 grid gap-2 border-t border-[var(--line)] pt-5 text-[var(--muted)]" data-reveal="up" data-delay="0.1">
+                <ul className="mono mt-6 hidden gap-2 border-t sm:grid border-[var(--line)] pt-5 text-[var(--muted)]" data-reveal="up" data-delay="0.1">
                   {c.facts.map((f) => (
                     <li key={f} className="flex gap-3">
                       <span className="text-[var(--heat)]" aria-hidden="true">
@@ -134,7 +134,7 @@ function Toolbox() {
           </div>
           <ol className="mono hidden gap-1 text-right md:grid" aria-label="Tool groups">
             {stack.map((g, gi) => (
-              <li key={g.id} className={gi === item.gi ? 'text-[var(--ink)]' : 'text-[var(--muted)]/70'}>
+              <li key={g.id} className={gi === item.gi ? 'text-[var(--ink)]' : 'text-[var(--muted)]'}>
                 {g.label} <span className="tabular-nums">{String(g.items.length).padStart(2, '0')}</span>
                 <span className={`ml-2 inline-block h-px w-6 align-middle ${gi === item.gi ? 'bg-[var(--heat)]' : 'bg-[var(--line)]'}`} aria-hidden="true" />
               </li>
@@ -185,19 +185,19 @@ function Stations() {
       </h2>
       {featured.map((p, i) => (
         <section key={p.slug} data-key={STACK_KEY + 1 + i} aria-labelledby={`st-${p.slug}`} className="relative h-[150svh]">
-          <div className="sticky top-[16svh] px-[var(--gutter)]">
-            <article className="plate w-full max-w-[480px] p-6 sm:p-8">
+          <div className="sticky top-[50svh] px-[var(--gutter)] md:top-[16svh]">
+            <article className="plate w-full max-w-[480px] p-5 sm:p-8">
               <p className="mono flex justify-between text-[var(--muted)]">
                 <span className="text-[var(--heat)]">Station {String(i + 1).padStart(2, '0')}</span>
                 <span>{p.period}</span>
               </p>
-              <h3 id={`st-${p.slug}`} className="display mt-5 text-[clamp(38px,4.2vw,66px)]" data-split>
+              <h3 id={`st-${p.slug}`} className="display mt-3 text-[clamp(32px,4.2vw,66px)] sm:mt-5" data-split>
                 {p.title}
               </h3>
               <p className="mono mt-3 text-[var(--muted)]">
                 {p.role} · {p.org}
               </p>
-              <p className="mt-5 text-[17px]" data-reveal="up">
+              <p className="mt-3 text-[16px] sm:mt-5 sm:text-[17px]" data-reveal="up">
                 {p.summary}
               </p>
               <img
@@ -209,7 +209,7 @@ function Stations() {
                 decoding="async"
                 className="nogl-only mt-6 aspect-[16/10] w-full border border-[var(--line)] object-cover object-top"
               />
-              <ul className="mono mt-6 grid gap-2 border-t border-[var(--line)] pt-5 text-[var(--ink)]/85" data-reveal="up" data-delay="0.1">
+              <ul className="mono mt-6 hidden gap-2 border-t border-[var(--line)] pt-5 text-[var(--ink)]/85 sm:grid" data-reveal="up" data-delay="0.1">
                 {p.outcome.slice(0, 2).map((o) => (
                   <li key={o} className="flex gap-3">
                     <span className="text-[var(--heat)]" aria-hidden="true">
@@ -219,7 +219,7 @@ function Stations() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 sm:mt-7">
                 <ForgeLink to="/work/$slug" params={{ slug: p.slug }} className="heat">
                   <span className="heat__label">Case study</span>
                   <span className="heat__arrow" aria-hidden="true">
@@ -228,7 +228,7 @@ function Stations() {
                   <span className="sr-only">: {p.title}</span>
                 </ForgeLink>
                 {p.link && (
-                  <a href={p.link.href} target="_blank" rel="noreferrer" className="link text-[15px]">
+                  <a href={p.link.href} target="_blank" rel="noopener noreferrer" className="link inline-flex min-h-[32px] items-center text-[15px]">
                     {p.link.label}
                     <span className="sr-only"> (opens in a new tab)</span>
                   </a>
@@ -268,7 +268,7 @@ function ContactSection() {
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-[var(--line)] pt-5 text-[15px]">
             {site.socials.map((s) => (
               <li key={s.label}>
-                <a className="util inline-flex min-h-[32px] items-center" href={s.href} target="_blank" rel="noreferrer">
+                <a className="util inline-flex min-h-[32px] items-center" href={s.href} target="_blank" rel="noopener noreferrer">
                   {s.label}
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>

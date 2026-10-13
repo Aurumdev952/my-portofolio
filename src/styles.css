@@ -319,6 +319,9 @@ html.js .doors {
 .doors.is-open {
   visibility: hidden;
 }
+.doors[hidden] {
+  display: none !important;
+}
 
 /* ---------- reveal gating: hidden only when motion is on ---------- */
 html.motion [data-reveal],

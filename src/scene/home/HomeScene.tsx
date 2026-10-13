@@ -25,14 +25,19 @@ function keyCam(i: number, out: THREE.Vector3, mobile: boolean) {
   const k = KEYS[i]
   out.set(...k.cam)
   if (mobile) {
-    v.set(...k.tgt)
-    out.sub(v).multiplyScalar(1.5).add(v)
+    keyTgt(i, v, true)
+    out.x += k.mDx ?? 0
+    out.sub(v).multiplyScalar(k.mZoom ?? 1.5).add(v)
   }
   return out
 }
 function keyTgt(i: number, out: THREE.Vector3, mobile: boolean) {
-  out.set(...KEYS[i].tgt)
-  if (mobile) out.y -= 0.45
+  const k = KEYS[i]
+  out.set(...k.tgt)
+  if (mobile) {
+    out.y -= 0.45
+    out.x += k.mDx ?? 0
+  }
   return out
 }
 
