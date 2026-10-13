@@ -1,10 +1,13 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useRef } from 'react'
 import { projects, site, stack } from '#/content/site'
+import type { ProjectArt } from '#/content/site'
 import { ForgeLink } from '#/components/ForgeLink'
 import { Logo } from '#/components/Logo'
 import { useReveal } from '#/motion/reveal'
 import { artDataUri } from '#/art/systemArt'
+
+const DIAGRAMS: ProjectArt[] = ['routes', 'tutor', 'pipeline', 'vault', 'mesh', 'gate']
 
 const iconFor = (name: string) => {
   for (const g of stack) for (const it of g.items) if (it.name.toLowerCase() === name.toLowerCase()) return it.icon
@@ -98,21 +101,6 @@ function CaseStudy() {
         </figcaption>
       </figure>
 
-      {p.image?.mobile && (
-        <figure className="mt-10 grid items-end gap-6 md:grid-cols-12" data-reveal="up">
-          <img
-            src={p.image.mobile}
-            alt={`${p.title} on a phone`}
-            width={780}
-            height={1688}
-            loading="lazy"
-            decoding="async"
-            className="w-full max-w-[300px] border border-[var(--line)] md:col-span-3"
-          />
-          <figcaption className="mono text-[var(--muted)] md:col-span-4">The same site on a 390 px phone screen.</figcaption>
-        </figure>
-      )}
-
       <div className="mt-24 grid gap-16 md:grid-cols-12">
         <section className="md:col-span-4" aria-labelledby="ctx">
           <h2 id="ctx" className="mono text-[var(--heat)]">
@@ -121,6 +109,20 @@ function CaseStudy() {
           <p className="mt-4 text-[19px] leading-relaxed" data-reveal="up">
             {p.context}
           </p>
+          {p.image?.mobile && (
+            <figure className="mt-10" data-reveal="up">
+              <img
+                src={p.image.mobile}
+                alt={`${p.title} on a phone`}
+                width={780}
+                height={1688}
+                loading="lazy"
+                decoding="async"
+                className="w-full max-w-[260px] border border-[var(--line)]"
+              />
+              <figcaption className="mono mt-3 text-[var(--muted)]">The same site on a 390 px phone screen.</figcaption>
+            </figure>
+          )}
         </section>
         <section className="md:col-span-7 md:col-start-6" aria-labelledby="built">
           <h2 id="built" className="mono text-[var(--heat)]">
@@ -136,6 +138,24 @@ function CaseStudy() {
           </ol>
         </section>
       </div>
+
+      {p.image && DIAGRAMS.includes(p.art) && (
+        <section className="mt-24" aria-labelledby="sys">
+          <h2 id="sys" className="mono text-[var(--heat)]">
+            System view
+          </h2>
+          <figure className="mt-5" data-reveal="clip">
+            <img
+              src={artDataUri(p.art, p.title)}
+              alt={`Architecture of ${p.title}, drawn as a diagram`}
+              width={1600}
+              height={1000}
+              loading="lazy"
+              className="aspect-[16/10] w-full border border-[var(--line)]"
+            />
+          </figure>
+        </section>
+      )}
 
       <section className="mt-24 grid gap-10 md:grid-cols-12" aria-labelledby="out">
         <h2 id="out" className="mono text-[var(--heat)] md:col-span-4">

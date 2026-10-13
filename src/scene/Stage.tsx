@@ -4,21 +4,64 @@ import { PerformanceMonitor } from '@react-three/drei'
 import { Bloom, EffectComposer, Noise, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import * as THREE from 'three'
-import { gsap, isMobile } from '#/motion/engine'
+import { gsap, isMobile, isQA } from '#/motion/engine'
 import { story, useUI } from '#/motion/story'
 import { HomeScene } from './home/HomeScene'
 import { GalleryScene } from './gallery/GalleryScene'
 import { Sparks } from './shared/Sparks'
+import { setTextureUploader } from './shared/textures'
 import { Glow } from './home/Hangar'
 
-/** One clock: GSAP's ticker advances the R3F frame. */
+type Probe = { calls: number; tris: number; programs: number; frameMs: number; frames: number; lights: number }
+declare global {
+  interface Window {
+    __forge?: Probe
+  }
+}
+
+/** One clock: GSAP's ticker advances the R3F frame. With ?qa it also records frame cost. */
 function Driver() {
   const advance = useThree((s) => s.advance)
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
   useEffect(() => {
-    const tick = (time: number) => advance(time)
+    const qa = isQA()
+    const probe: Probe = { calls: 0, tris: 0, programs: 0, frameMs: 0, frames: 0, lights: 0 }
+    if (qa) {
+      window.__forge = probe
+      gl.info.autoReset = false
+    }
+    const tick = (time: number) => {
+      if (!qa) return advance(time)
+      gl.info.reset()
+      const t0 = performance.now()
+      advance(time)
+      const ms = performance.now() - t0
+      probe.frames++
+      probe.frameMs += (ms - probe.frameMs) * 0.1
+      probe.calls = gl.info.render.calls
+      probe.tris = gl.info.render.triangles
+      probe.programs = gl.info.programs?.length ?? 0
+      if (probe.frames % 30 === 0) {
+        let n = 0
+        scene.traverseVisible((o) => {
+          if ((o as THREE.Light).isLight) n++
+        })
+        probe.lights = n
+      }
+    }
     gsap.ticker.add(tick)
     return () => gsap.ticker.remove(tick)
-  }, [advance])
+  }, [advance, gl, scene])
+  return null
+}
+
+function Uploader() {
+  const gl = useThree((s) => s.gl)
+  useEffect(() => {
+    setTextureUploader((t) => gl.initTexture(t))
+    return () => setTextureUploader(() => {})
+  }, [gl])
   return null
 }
 
@@ -77,7 +120,7 @@ export default function Stage() {
     const mobile = isMobile()
     const cores = navigator.hardwareConcurrency || 4
     if (mobile || cores <= 4) setQuality('low')
-    setDpr(Math.min(window.devicePixelRatio, mobile ? 1.5 : 1.75))
+    setDpr(Math.min(window.devicePixelRatio, 1.5))
   }, [setQuality])
 
   const onReady = useCallback(() => {
@@ -100,6 +143,7 @@ export default function Stage() {
       }}
     >
       <Driver />
+      <Uploader />
       <Pointer />
       <PerformanceMonitor
         onDecline={() => {

@@ -66,7 +66,32 @@ const span = Math.max(1, hi - lo)
 const depthOut = Buffer.alloc(width * height)
 for (let i = 0; i < depth.length; i++) {
   const n = Math.min(1, Math.max(0, (depth[i] - lo) / span))
-  depthOut[i] = Math.round(n * 255 * (alpha[i] / 255))
+  depthOut[i] = alpha[i] > 127 ? Math.round(n * 255) : 0
+}
+// Grow the depth a few pixels past the silhouette so the relief has no steep "skirt" at its
+// edge: edge triangles stay flat and the alpha cut-out stays clean.
+let known = Uint8Array.from(alpha, (a) => (a > 127 ? 1 : 0))
+for (let pass = 0; pass < 14; pass++) {
+  const next = known.slice()
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x
+      if (known[i]) continue
+      let sum = 0
+      let n = 0
+      for (const j of [i - 1, i + 1, i - width, i + width]) {
+        if (known[j]) {
+          sum += depthOut[j]
+          n++
+        }
+      }
+      if (n) {
+        depthOut[i] = Math.round(sum / n)
+        next[i] = 1
+      }
+    }
+  }
+  known = next
 }
 
 const rgba = Buffer.alloc(width * height * 4)

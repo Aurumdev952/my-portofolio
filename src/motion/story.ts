@@ -17,6 +17,8 @@ export const story = {
   py: 0,
   /** stack section progress 0..1 */
   stack: 0,
+  /** plate currently under the press (written by the 3D conveyor, -1 without GL) */
+  stackIndex: -1,
   /** gate section progress 0..1 */
   gate: 0,
   /** scroll velocity */

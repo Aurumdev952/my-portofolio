@@ -28,7 +28,11 @@ export function Frame() {
 
   return (
     <>
-      <header className="frame-corner frame-corner--top left-0 right-0 top-0 flex items-start justify-between px-[var(--gutter)] pt-4 mix-blend-difference">
+      <header className="frame-corner frame-corner--top left-0 right-0 top-0 flex items-start justify-between px-[var(--gutter)] pb-6 pt-4">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[rgba(11,12,14,0.92)] via-[rgba(11,12,14,0.62)] to-transparent backdrop-blur-[2px] [mask-image:linear-gradient(#000_55%,transparent)]"
+        />
         <ForgeLink to="/" className="draw gap-3 text-[15px] font-semibold tracking-tight">
           <span className="display text-[22px] leading-none" style={{ fontStretch: '62%' }}>
             {site.initials}
@@ -56,7 +60,7 @@ export function Frame() {
         </nav>
       </header>
       <div
-        className="frame-corner frame-corner--bottom pointer-events-none bottom-0 left-0 right-0 flex items-end justify-between px-[var(--gutter)] pb-4 mix-blend-difference"
+        className="frame-corner frame-corner--bottom pointer-events-none bottom-0 left-0 right-0 flex items-end justify-between px-[var(--gutter)] pb-4 [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]"
         aria-hidden="true"
       >
         <span className="mono text-[var(--ink)]">{label}</span>

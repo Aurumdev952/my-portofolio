@@ -137,7 +137,7 @@ function Work() {
                   type="button"
                   aria-pressed={filter === f}
                   onClick={() => setFilter(f)}
-                  className={`draw mono px-1 text-[13px] ${filter === f ? 'is-active text-[var(--ink)]' : 'text-[var(--muted)]'}`}
+                  className={`chip mono ${filter === f ? 'is-active' : ''}`}
                 >
                   {f}
                 </button>
@@ -145,6 +145,15 @@ function Work() {
             </div>
           </div>
 
+          {/* no WebGL: the current cover on the stage */}
+          <img
+            key={p.slug}
+            src={p.image?.src ?? artDataUri(p.art, p.title)}
+            alt={p.image?.alt ?? `System view of ${p.title}`}
+            width={p.image?.w ?? 1600}
+            height={p.image?.h ?? 1000}
+            className="nogl-only absolute left-1/2 top-[44%] aspect-[16/10] w-[min(86vw,620px)] -translate-x-1/2 -translate-y-1/2 border border-[var(--line)] object-cover object-top shadow-[0_0_0_1px_rgba(255,122,26,0.35),0_30px_80px_rgba(0,0,0,0.6)]"
+          />
           {/* hit area over the centre frame */}
           <button
             type="button"
@@ -188,14 +197,14 @@ function Work() {
                 <span className="mono hidden text-[var(--muted)] lg:inline">Scroll, or use the arrow keys</span>
               </div>
             </div>
-            <nav aria-label="All projects" className="hidden md:col-span-3 md:col-start-10 md:block">
-              <ol className="grid gap-0.5">
+            <nav aria-label="All projects" className="plate hidden p-3 md:col-span-3 md:col-start-10 md:block">
+              <ol className="grid">
                 {projects.map((q, i) => (
                   <li key={q.slug} className={matches(i) ? '' : 'opacity-30'}>
                     <ForgeLink
                       to="/work/$slug"
                       params={{ slug: q.slug }}
-                      className={`draw w-full justify-between gap-4 text-[15px] ${i === index ? 'is-active text-[var(--ink)]' : 'text-[var(--muted)]'}`}
+                      className={`row w-full justify-between gap-4 text-[15px] ${i === index ? 'is-active' : ''}`}
                       onMouseEnter={() => go(i)}
                       onFocus={() => go(i)}
                     >

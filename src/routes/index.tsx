@@ -6,7 +6,7 @@ import { ContactForm } from '#/components/Contact'
 import { Logo } from '#/components/Logo'
 import { useReveal } from '#/motion/reveal'
 import { startHomeDriver } from '#/motion/homeDriver'
-import { onScroll } from '#/motion/engine'
+import { ScrollTrigger, gsap, onScroll, onTick, prefersReducedMotion, scrollTo } from '#/motion/engine'
 import { story } from '#/motion/story'
 import { artDataUri } from '#/art/systemArt'
 
@@ -26,6 +26,13 @@ export const Route = createFileRoute('/')({
 
 const STACK_KEY = chapters.length + 1
 const GATE_KEY = chapters.length + 3 + featured.length
+const NOGL_FILTERS = [
+  'brightness(0.12) drop-shadow(0 0 2px #bfd9ff) drop-shadow(0 0 22px rgba(191,217,255,0.4))',
+  'grayscale(1) invert(1) brightness(0.5) sepia(1) hue-rotate(175deg) saturate(2.4) contrast(1.4)',
+  'grayscale(1) brightness(0.55) sepia(1) saturate(7) hue-rotate(-14deg) contrast(1.5)',
+  'sepia(0.55) saturate(1.7) contrast(1.15) brightness(0.9)',
+  'none',
+]
 const allItems = stack.flatMap((g, gi) => g.items.map((it) => ({ ...it, gi })))
 
 function Hero() {
@@ -39,7 +46,7 @@ function Hero() {
           alt=""
           width={720}
           height={666}
-          className="nogl-only pointer-events-none absolute bottom-0 right-[-10%] w-[min(92vw,820px)] opacity-90 [filter:brightness(0.06)_drop-shadow(0_0_1px_#bfd9ff)_drop-shadow(0_0_18px_rgba(191,217,255,0.35))] sm:right-[4%]"
+          className="nogl-only pointer-events-none absolute right-[-6%] top-[9svh] w-[min(100vw,760px)] [filter:brightness(0.14)_drop-shadow(0_0_1px_#bfd9ff)_drop-shadow(0_0_24px_rgba(191,217,255,0.45))] [mask-image:linear-gradient(#000_70%,transparent)] sm:bottom-0 sm:right-[4%] sm:top-auto"
         />
         <div className="relative max-w-[1100px]">
           <p className="mono mb-5 text-[var(--muted)]" data-reveal="fade" data-intro>
@@ -76,7 +83,17 @@ function Chapters() {
         return (
           <section key={c.id} data-key={i + 1} aria-labelledby={`ch-${c.id}`} className="relative h-[150svh]">
             <div className={`sticky top-[47svh] flex px-[var(--gutter)] md:top-[18svh] ${right ? 'justify-end' : 'justify-start'}`}>
-              <article className="plate w-full max-w-[470px] p-5 sm:p-8">
+              {/* no WebGL: the same forging stages, drawn with CSS filters on the portrait */}
+              <img
+                src="/portrait/poster.webp"
+                alt=""
+                width={720}
+                height={666}
+                loading="lazy"
+                style={{ filter: NOGL_FILTERS[i] }}
+                className={`nogl-only pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 w-[min(78vw,340px)] -translate-x-1/2 [mask-image:linear-gradient(#000_75%,transparent)] md:bottom-auto md:top-[-4svh] md:w-[min(42vw,560px)] md:translate-x-0 ${right ? 'md:left-[6vw]' : 'md:left-auto md:right-[6vw]'}`}
+              />
+              <article data-card className="plate w-full max-w-[470px] p-5 sm:p-8">
                 <p className="mono flex items-center justify-between text-[var(--heat)]">
                   <span>{c.year}</span>
                   <span className="text-[var(--muted)]">
@@ -110,14 +127,18 @@ function Chapters() {
 
 function Toolbox() {
   const [active, setActive] = useState(0)
-  useEffect(
-    () =>
-      onScroll(() => {
-        const i = Math.round(story.stack * (allItems.length - 1))
-        setActive((a) => (a === i ? a : i))
-      }),
-    [],
-  )
+  useEffect(() => {
+    const pick = () => {
+      const i = Math.min(allItems.length - 1, Math.max(0, story.stackIndex >= 0 ? story.stackIndex : Math.round(story.stack * (allItems.length - 1))))
+      setActive((a) => (a === i ? a : i))
+    }
+    const offA = onScroll(pick)
+    const offB = onTick(pick)
+    return () => {
+      offA()
+      offB()
+    }
+  }, [])
   const item = allItems[active]
   const group = stack[item.gi]
   return (
@@ -186,7 +207,7 @@ function Stations() {
       {featured.map((p, i) => (
         <section key={p.slug} data-key={STACK_KEY + 1 + i} aria-labelledby={`st-${p.slug}`} className="relative h-[150svh]">
           <div className="sticky top-[50svh] px-[var(--gutter)] md:top-[16svh]">
-            <article className="plate w-full max-w-[480px] p-5 sm:p-8">
+            <article data-card className="plate w-full max-w-[480px] p-5 sm:p-8">
               <p className="mono flex justify-between text-[var(--muted)]">
                 <span className="text-[var(--heat)]">Station {String(i + 1).padStart(2, '0')}</span>
                 <span>{p.period}</span>
@@ -251,13 +272,13 @@ function ContactSection() {
           <h2 id="contact-title" className="display mt-5 text-[clamp(44px,5.4vw,88px)]" data-split>
             Let’s build
             <br />
-            something that
+            something
             <br />
-            holds
+            that holds
           </h2>
           <p className="mt-5 max-w-[46ch] text-[17px] text-[var(--ink)]/85">
             Tell me about the system, the load and the deadline. Or write to{' '}
-            <a className="link" href={`mailto:${site.email}`}>
+            <a className="link inline-flex min-h-[28px] items-center" href={`mailto:${site.email}`}>
               {site.email}
             </a>
             .
@@ -290,7 +311,7 @@ function Gate() {
   return (
     <section data-key={GATE_KEY} id="gate" aria-labelledby="gate-title" className="relative h-[200svh]">
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-end px-[var(--gutter)] pb-[12svh] text-center">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55svh] bg-gradient-to-t from-[rgba(11,12,14,0.92)] via-[rgba(11,12,14,0.6)] to-transparent" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55svh] bg-gradient-to-t from-[rgba(11,12,14,0.97)] via-[rgba(11,12,14,0.86)_45%] to-transparent" aria-hidden="true" />
         <p className="mono relative text-[var(--muted)]">All {featured.length + 4} projects, one room</p>
         <h2 id="gate-title" className="display relative mt-4 text-[clamp(52px,9vw,150px)]" data-split>
           The gallery
@@ -316,6 +337,39 @@ function Home() {
   useEffect(() => {
     if (!ref.current) return
     return startHomeDriver(ref.current, { stackKey: STACK_KEY, gateKey: GATE_KEY })
+  }, [])
+  // One card on screen at a time: each card arrives with its section and leaves before the
+  // next one is read.
+  useEffect(() => {
+    const root = ref.current
+    if (!root || prefersReducedMotion()) return
+    const ctx = gsap.context(() => {
+      root.querySelectorAll<HTMLElement>('[data-card]').forEach((card) => {
+        const section = card.closest('section')
+        if (!section) return
+        gsap
+          .timeline({
+            scrollTrigger: { trigger: section, start: 'top 75%', end: 'bottom 35%', scrub: 0.6, invalidateOnRefresh: true },
+          })
+          .fromTo(card, { opacity: 0, y: 48 }, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out' })
+          .to(card, { opacity: 1, duration: 0.64 })
+          .to(card, { opacity: 0, y: -36, duration: 0.18, ease: 'power2.in' })
+      })
+    }, root)
+    ScrollTrigger.refresh()
+    // Keyboard: tabbing into a card brings its section to the reading position.
+    const onFocus = (e: FocusEvent) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-card]')
+      const section = card?.closest('section')
+      if (!section) return
+      const top = section.getBoundingClientRect().top + window.scrollY
+      scrollTo(top + section.offsetHeight / 2 - window.innerHeight / 2, { immediate: true })
+    }
+    root.addEventListener('focusin', onFocus)
+    return () => {
+      root.removeEventListener('focusin', onFocus)
+      ctx.revert()
+    }
   }, [])
   return (
     <div ref={ref}>

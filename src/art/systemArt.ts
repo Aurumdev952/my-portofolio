@@ -123,10 +123,105 @@ function gate() {
   return frame('Visitor management system', s)
 }
 
+
+function routes() {
+  let s = ''
+  // clients
+  const clients = ['RIDER APP', 'DRIVER APP', 'MERCHANT', 'ADMIN']
+  clients.forEach((c, i) => {
+    const y = 260 + i * 130
+    s += `<rect x="90" y="${y - 40}" width="200" height="80" fill="#111317" stroke="${i === 1 ? HEAT : ARC}" stroke-width="2"/>`
+    s += label(190, y + 7, c, INK, 17)
+    s += `<path d="M290 ${y} C 380 ${y}, 400 500, 470 500" fill="none" stroke="${LINE}" stroke-width="2"/>`
+  })
+  // gateway + realtime
+  s += `<rect x="470" y="420" width="220" height="160" fill="rgba(191,217,255,0.05)" stroke="${ARC}" stroke-width="2"/>`
+  s += label(580, 492, 'API GATEWAY', INK, 19) + label(580, 522, 'WEBSOCKETS', MUTED, 16)
+  const services = [
+    ['BOOKING', 250],
+    ['ROUTING', 380],
+    ['WALLET', 510, true],
+    ['NOTIFY', 640],
+    ['TENANTS', 770],
+  ]
+  for (const [name, y, hot] of services as [string, number, boolean?][]) {
+    s += `<path d="M690 500 C 760 500, 760 ${y}, 820 ${y}" fill="none" stroke="${LINE}" stroke-width="2"/>`
+    s += `<rect x="820" y="${y - 34}" width="190" height="68" fill="#111317" stroke="${hot ? HEAT : INK}" stroke-width="2"/>`
+    s += label(915, y + 7, name, INK, 17)
+  }
+  // ledger + postgis
+  s += `<path d="M1010 510 H1120" stroke="${HEAT}" stroke-width="2"/>`
+  s += `<rect x="1120" y="440" width="190" height="140" fill="rgba(255,122,26,0.06)" stroke="${HEAT}" stroke-width="2"/>`
+  s += label(1215, 500, 'LEDGER', HEAT, 19) + label(1215, 530, 'PAYMENTS', MUTED, 15)
+  s += `<path d="M1010 380 C 1080 380, 1080 300, 1150 300" fill="none" stroke="${LINE}" stroke-width="2"/>`
+  s += `<ellipse cx="1260" cy="300" rx="120" ry="70" fill="#111317" stroke="${ARC}" stroke-width="2"/>`
+  s += label(1260, 296, 'POSTGRESQL', INK, 17) + label(1260, 322, 'POSTGIS INDEX', MUTED, 15)
+  // geofence
+  s += `<circle cx="1360" cy="720" r="90" fill="none" stroke="${HEAT}" stroke-width="2" stroke-dasharray="6 8"/>`
+  s += `<circle cx="1360" cy="720" r="7" fill="${HEAT}"/>` + label(1360, 840, 'GEOFENCE', MUTED, 16)
+  s += label(64, 930, 'Apps talk over one gateway; money moves through a ledger; location lives in PostGIS.', MUTED, 20, 'start')
+  return frame('Tujyane platform', s)
+}
+
+function tutor() {
+  let s = ''
+  s += `<rect x="90" y="420" width="210" height="140" fill="#111317" stroke="${INK}" stroke-width="2"/>`
+  s += label(195, 482, 'STUDENT', INK, 19) + label(195, 512, 'NEXT.JS CHAT', MUTED, 15)
+  s += `<path d="M300 490 H420" stroke="${LINE}" stroke-width="2"/>`
+  s += `<rect x="420" y="400" width="240" height="180" fill="rgba(191,217,255,0.05)" stroke="${ARC}" stroke-width="2"/>`
+  s += label(540, 470, 'CONTEXT ENGINE', INK, 18) + label(540, 500, 'MULTI TURN', MUTED, 15) + label(540, 525, 'HISTORY', MUTED, 15)
+  // retrieval
+  s += `<path d="M660 450 C 740 450, 740 300, 820 300" fill="none" stroke="${HEAT}" stroke-width="2"/>`
+  s += `<rect x="820" y="230" width="260" height="140" fill="rgba(255,122,26,0.06)" stroke="${HEAT}" stroke-width="2"/>`
+  s += label(950, 292, 'RETRIEVAL', HEAT, 19) + label(950, 322, 'VECTOR SEARCH', MUTED, 15)
+  for (let i = 0; i < 6; i++) {
+    s += `<rect x="${1150 + (i % 3) * 70}" y="${220 + Math.floor(i / 3) * 90}" width="52" height="68" fill="#16181c" stroke="${LINE}" stroke-width="2"/>`
+  }
+  s += label(1255, 410, 'CURRICULUM', MUTED, 15)
+  s += `<path d="M1080 300 H1140" stroke="${LINE}" stroke-width="2"/>`
+  // model
+  s += `<path d="M660 530 C 740 530, 740 680, 820 680" fill="none" stroke="${ARC}" stroke-width="2"/>`
+  s += `<rect x="820" y="610" width="260" height="140" fill="#111317" stroke="${ARC}" stroke-width="2"/>`
+  s += label(950, 672, 'OPEN SOURCE LLM', INK, 18) + label(950, 702, 'GROUNDED ANSWER', MUTED, 15)
+  s += `<path d="M1080 680 C 1200 680, 1200 560, 1300 560" fill="none" stroke="${LINE}" stroke-width="2"/>`
+  s += label(1330, 552, '−45%', HEAT, 40, 'start') + label(1330, 590, 'HALLUCINATIONS', MUTED, 15, 'start')
+  s += label(64, 930, 'Every answer is built from retrieved curriculum passages, then written by the model.', MUTED, 20, 'start')
+  return frame('UWERA AI tutor', s)
+}
+
+function pipeline() {
+  let s = ''
+  s += `<rect x="90" y="420" width="220" height="140" fill="#111317" stroke="${INK}" stroke-width="2"/>`
+  s += label(200, 482, 'RELEASE', INK, 19) + label(200, 512, 'CI BUILD', MUTED, 15)
+  s += `<path d="M310 490 H440" stroke="${HEAT}" stroke-width="2"/>`
+  s += `<rect x="440" y="400" width="240" height="180" fill="rgba(255,122,26,0.06)" stroke="${HEAT}" stroke-width="2"/>`
+  s += label(560, 470, 'PACKAGER', HEAT, 19) + label(560, 500, 'STACK BUNDLE', MUTED, 15)
+  const targets = [
+    ['CLOUD', 250, ARC],
+    ['ON PREMISE A', 490, INK],
+    ['ON PREMISE B', 730, INK],
+  ] as const
+  for (const [name, y, c] of targets) {
+    s += `<path d="M680 490 C 780 490, 780 ${y}, 880 ${y}" fill="none" stroke="${LINE}" stroke-width="2"/>`
+    s += `<rect x="880" y="${y - 70}" width="240" height="140" fill="#111317" stroke="${c}" stroke-width="2"/>`
+    s += label(1000, y - 8, name, INK, 18)
+    for (let k = 0; k < 4; k++) s += `<rect x="${910 + k * 52}" y="${y + 18}" width="40" height="8" fill="${k === 1 ? HEAT : 'rgba(191,217,255,0.4)'}"/>`
+  }
+  s += `<rect x="1220" y="380" width="260" height="220" fill="#111317" stroke="${ARC}" stroke-width="2"/>`
+  s += label(1350, 450, 'DASHBOARDS', INK, 18)
+  for (let k = 0; k < 7; k++) s += `<rect x="${1250 + k * 30}" y="${560 - ((k * 37) % 90)}" width="18" height="${(k * 37) % 90 + 10}" fill="${k === 4 ? HEAT : 'rgba(191,217,255,0.4)'}"/>`
+  s += `<path d="M1120 490 H1220" stroke="${LINE}" stroke-width="2"/>`
+  s += label(64, 930, 'One pipeline ships the same stack to the cloud or a client’s own servers.', MUTED, 20, 'start')
+  return frame('Uzabox distribution pipeline', s)
+}
+
 export function systemArt(kind: ProjectArt, title = ''): string {
   if (kind === 'vault') return vault()
   if (kind === 'mesh') return mesh()
   if (kind === 'gate') return gate()
+  if (kind === 'routes') return routes()
+  if (kind === 'tutor') return tutor()
+  if (kind === 'pipeline') return pipeline()
   return frame(title, label(W / 2, H / 2, title.toUpperCase(), INK, 40))
 }
 

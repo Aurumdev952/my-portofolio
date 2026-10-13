@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { gsap, prefersReducedMotion } from '#/motion/engine'
-import { openDoors } from '#/motion/doors'
+import { openDoors, skipLoader } from '#/motion/doors'
 import { useUI } from '#/motion/story'
 
-const MIN_MS = 900
-const MAX_MS = 1600
+const MIN_MS = 800
+const MAX_MS = 1400
 
 /** Loader. Progress is real: fonts, the portrait textures and the 3D scene. */
 export function Doors({ waitForGl }: { waitForGl: boolean }) {
@@ -12,6 +12,11 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
   const beadRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (document.documentElement.classList.contains('skip-loader')) {
+      useUI.getState().setLoaded(true)
+      skipLoader()
+      return
+    }
     const start = performance.now()
     let fontsDone = false
     let imagesDone = 0
@@ -34,7 +39,7 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
       const p = Math.min(100, Math.round(shown.v * 100))
       if (countRef.current) countRef.current.textContent = String(p).padStart(3, '0')
       if (beadRef.current) beadRef.current.style.scale = `${shown.v} 1`
-      if (!opened && (shown.v > 0.985 || elapsed > MAX_MS + 200)) {
+      if (!opened && (shown.v > 0.97 || elapsed > MAX_MS)) {
         opened = true
         gsap.ticker.remove(tick)
         useUI.getState().setLoaded(true)
@@ -53,7 +58,7 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
   }, [])
 
   return (
-    <div id="loader" className="doors" aria-hidden="true">
+    <div id="loader" className="doors" data-mode="loader" data-state="closed" aria-hidden="true">
       <div className="doors__leaf doors__leaf--l" />
       <div className="doors__leaf doors__leaf--r" />
       <div className="doors__seam" />

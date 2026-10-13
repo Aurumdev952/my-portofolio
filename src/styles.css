@@ -208,6 +208,109 @@ img {
   background-size: 100% 2px;
 }
 
+/* Filter chips: a heat bar slides in, label goes full ink */
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  min-width: 44px;
+  justify-content: center;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: rgba(11, 12, 14, 0.6);
+  overflow: clip;
+  transition: color 0.3s, border-color 0.3s;
+}
+.chip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--heat);
+  scale: 0 1;
+  transform-origin: left;
+  transition: scale 0.45s var(--ease-out);
+}
+.chip.is-active {
+  color: var(--ink);
+  border-color: rgba(255, 122, 26, 0.6);
+}
+.chip.is-active::after {
+  scale: 1 1;
+}
+@media (hover: hover) {
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--heat);
+    background: rgba(255, 122, 26, 0.1);
+  }
+  .chip:hover::after {
+    scale: 1 1;
+  }
+}
+.chip:focus-visible {
+  color: var(--ink);
+  background: rgba(255, 122, 26, 0.1);
+}
+
+/* Index rows: an orange tick leads, the row steps in */
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 6px;
+  color: var(--muted);
+  transition: color 0.3s, background-color 0.3s;
+}
+.row > span:first-child {
+  transition: translate 0.4s var(--ease-out);
+}
+.row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  background: var(--heat);
+  scale: 0 1;
+  transform-origin: left;
+  transition: scale 0.4s var(--ease-out);
+}
+.row.is-active {
+  color: var(--ink);
+}
+.row.is-active > span:first-child {
+  translate: 12px 0;
+}
+.row.is-active::before {
+  scale: 1 1;
+}
+@media (hover: hover) {
+  .row:hover {
+    color: var(--ink);
+    background: rgba(255, 122, 26, 0.07);
+  }
+  .row:hover > span:first-child {
+    translate: 12px 0;
+  }
+  .row:hover::before {
+    scale: 1 1;
+  }
+}
+.row:focus-visible {
+  color: var(--ink);
+}
+.row:focus-visible > span:first-child {
+  translate: 12px 0;
+}
+
 /* Inline text links: underline at rest, rises into a heat band */
 .link {
   background: linear-gradient(var(--heat) 0 0) left bottom / 100% 1px no-repeat;
@@ -274,6 +377,9 @@ img {
 html.frame-away .frame-corner--top {
   translate: 0 -160%;
 }
+html.frame-away .frame-corner--top:focus-within {
+  translate: 0 0;
+}
 html.frame-away .frame-corner--bottom {
   translate: 0 160%;
 }
@@ -285,9 +391,17 @@ html.frame-away .frame-corner--bottom {
   z-index: 150;
   pointer-events: none;
   display: none;
+  --door-ease: cubic-bezier(0.86, 0, 0.12, 1);
 }
 html.js .doors {
   display: block;
+}
+/* Only the first visit to the home page shows the loader. */
+html.skip-loader .doors[data-mode='loader'] {
+  display: none;
+}
+.doors[hidden] {
+  display: none !important;
 }
 .doors__leaf {
   position: absolute;
@@ -297,13 +411,22 @@ html.js .doors {
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 120px),
     linear-gradient(180deg, #17181c, #0f1013);
+  transition: translate 0.76s var(--door-ease);
+  will-change: translate;
 }
 .doors__leaf--l {
   left: 0;
-  border-right: 1px solid rgba(255, 122, 26, 0.0);
 }
 .doors__leaf--r {
   right: 0;
+}
+.doors[data-state='open'] .doors__leaf--l {
+  translate: -101% 0;
+  transition-duration: 0.86s;
+}
+.doors[data-state='open'] .doors__leaf--r {
+  translate: 101% 0;
+  transition-duration: 0.86s;
 }
 .doors__seam {
   position: absolute;
@@ -315,12 +438,36 @@ html.js .doors {
   background: linear-gradient(180deg, transparent, var(--heat) 20%, #fff2d6 50%, var(--heat) 80%, transparent);
   box-shadow: 0 0 24px 4px rgba(255, 122, 26, 0.55);
   opacity: 0;
+  transition: opacity 0.2s ease 0.55s;
 }
-.doors.is-open {
-  visibility: hidden;
+.doors[data-state='closed'] .doors__seam {
+  opacity: 1;
 }
-.doors[hidden] {
-  display: none !important;
+.doors[data-state='open'] .doors__seam {
+  transition-delay: 0s;
+}
+.doors__hud {
+  transition: opacity 0.25s ease;
+}
+.doors[data-state='open'] .doors__hud,
+.doors[data-mode='transition'] .doors__hud {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .doors__leaf,
+  .doors__seam {
+    transition: none;
+  }
+  .doors {
+    transition: opacity 0.25s linear;
+  }
+  .doors[data-state='open'] {
+    opacity: 0;
+  }
+  .doors[data-state='open'] .doors__leaf--l,
+  .doors[data-state='open'] .doors__leaf--r {
+    translate: 0 0;
+  }
 }
 
 /* ---------- reveal gating: hidden only when motion is on ---------- */

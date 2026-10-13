@@ -1,6 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { MeshReflectorMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { story } from '#/motion/story'
 
@@ -289,24 +288,7 @@ export function Hangar({ quality }: { quality: 'high' | 'low' }) {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -12]}>
         <planeGeometry args={[46, 70]} />
-        {quality === 'high' ? (
-          <MeshReflectorMaterial
-            map={floorMap}
-            blur={[400, 120]}
-            resolution={512}
-            mixBlur={1}
-            mixStrength={2.2}
-            roughness={0.85}
-            depthScale={0.6}
-            minDepthThreshold={0.4}
-            maxDepthThreshold={1.2}
-            color="#2a2c31"
-            metalness={0.55}
-            mirror={0.5}
-          />
-        ) : (
-          <meshStandardMaterial map={floorMap} color="#3a3d44" metalness={0.5} roughness={0.6} />
-        )}
+        <meshStandardMaterial map={floorMap} color="#3a3d44" metalness={0.65} roughness={0.42} envMapIntensity={0.6} />
       </mesh>
       {/* back wall + slit of light behind the forge */}
       <mesh position={[0, 6, 14]} rotation={[0, Math.PI, 0]} material={darkSteel}>

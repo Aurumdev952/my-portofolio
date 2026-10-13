@@ -27,7 +27,7 @@ function keyCam(i: number, out: THREE.Vector3, mobile: boolean) {
   if (mobile) {
     keyTgt(i, v, true)
     out.x += k.mDx ?? 0
-    out.sub(v).multiplyScalar(k.mZoom ?? 1.5).add(v)
+    out.sub(v).multiplyScalar(k.mZoom ?? 1.18).add(v)
   }
   return out
 }
@@ -60,9 +60,26 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
     }
   }, [])
 
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
   useEffect(() => {
-    if (data) onReady()
-  }, [data, onReady])
+    if (!data) return
+    let alive = true
+    // Compile every program now (stations, conveyor, gate) so scrolling never hitches on a
+    // first-time shader compile. Hidden groups are shown for the compile, then restored.
+    const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
+    const prev = groups.map((g) => g.visible)
+    groups.forEach((g) => (g.visible = true))
+    gl.compileAsync(scene, camera)
+      .catch(() => {})
+      .finally(() => {
+        groups.forEach((g, i) => (g.visible = prev[i]))
+        if (alive) onReady()
+      })
+    return () => {
+      alive = false
+    }
+  }, [data, onReady, gl, scene, camera])
 
   useEffect(() => {
     sparks.budget = quality === 'high' ? 1 : 0.45
@@ -71,7 +88,10 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
   const mobileRef = useRef(false)
   useEffect(() => {
     mobileRef.current = isMobile()
-  }, [size])
+    // phones are tall: a wider lens instead of a camera that backs into the scenery
+    camera.fov = mobileRef.current ? 44 : 35
+    camera.updateProjectionMatrix()
+  }, [size, camera])
 
   const labels = useMemo(() => KEYS.map((k) => k.name), [])
   const qa = useMemo(() => isQA(), [])
@@ -127,7 +147,8 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
 
     // only draw what is near the camera
     forgeActive.current = kk < KEY_INDEX.stack + 0.6
-    if (forgeGroup.current) forgeGroup.current.visible = kk < KEY_INDEX.firstStation
+    // The forge keeps its lights on: hiding a light changes the light count and forces every
+    // material to recompile mid scroll. Off screen meshes are frustum culled anyway.
     if (conveyorGroup.current) conveyorGroup.current.visible = kk > KEY_INDEX.stack - 1.2 && kk < KEY_INDEX.firstStation + 0.8
     if (stationsGroup.current) stationsGroup.current.visible = kk > KEY_INDEX.stack + 0.3
 
@@ -151,6 +172,7 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
       <group ref={conveyorGroup}>
         <Conveyor />
       </group>
+      <pointLight position={[0, 2.3, -6.4]} intensity={10} distance={6} color="#ffd2a1" />
       <group ref={stationsGroup}>
         <Stations />
       </group>
