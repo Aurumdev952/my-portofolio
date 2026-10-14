@@ -310,10 +310,10 @@ function ContactSection() {
 function Gate() {
   return (
     <section data-key={GATE_KEY} id="gate" aria-labelledby="gate-title" className="relative h-[200svh]">
-      <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-end px-[var(--gutter)] pb-[12svh] text-center">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55svh] bg-gradient-to-t from-[rgba(11,12,14,0.97)] via-[rgba(11,12,14,0.86)_45%] to-transparent" aria-hidden="true" />
+      <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-end px-[var(--gutter)] pb-[9svh] text-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42svh] bg-gradient-to-t from-[rgba(11,12,14,0.97)] via-[rgba(11,12,14,0.86)_45%] to-transparent" aria-hidden="true" />
         <p className="mono relative text-[var(--muted)]">All {featured.length + 4} projects, one room</p>
-        <h2 id="gate-title" className="display relative mt-4 text-[clamp(52px,9vw,150px)]" data-split>
+        <h2 id="gate-title" className="display relative mt-3 text-[clamp(48px,7vw,116px)]" data-split>
           The gallery
         </h2>
         <ForgeLink to="/work" className="heat relative mt-8">

@@ -85,8 +85,8 @@ export const KEYS: Key[] = [
   },
   {
     name: `${pad(chapters.length + 4 + featured.length)} The gate`,
-    cam: [0, 1.45, -22.4],
-    tgt: [0, 1.35, -30],
+    cam: [0, 1.4, -22.4],
+    tgt: [0, 1.1, -30],
     shift: 0,
     fig: GATE,
     forge: 1,
