@@ -3,6 +3,7 @@ import { Component, Suspense, lazy, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import appCss from '../styles.css?url'
 import { site } from '#/content/site'
+import { share } from '#/content/seo'
 import { Doors } from '#/components/Doors'
 import { Frame } from '#/components/Frame'
 import { transition } from '#/components/ForgeLink'
@@ -41,12 +42,9 @@ export const Route = createRootRoute({
       { title: `${site.name} · Software engineer` },
       { name: 'description', content: site.description },
       { property: 'og:site_name', content: site.name },
-      { property: 'og:type', content: 'website' },
-      { property: 'og:image', content: `${site.url}/og.png` },
-      { property: 'og:image:width', content: '1200' },
-      { property: 'og:image:height', content: '630' },
+      { property: 'og:locale', content: 'en_US' },
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:image', content: `${site.url}/og.png` },
+      ...share({ title: `${site.name} · Software engineer`, description: site.description }),
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
@@ -54,6 +52,7 @@ export const Route = createRootRoute({
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'icon', href: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'manifest', href: '/site.webmanifest' },
     ],
     scripts: [
       { children: HEAD_SCRIPT },
