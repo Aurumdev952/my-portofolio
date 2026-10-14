@@ -212,7 +212,6 @@ function Work() {
                       to="/work/$slug"
                       params={{ slug: q.slug }}
                       className={`row w-full justify-between gap-4 text-[15px] ${i === index ? 'is-active' : ''}`}
-                      onMouseEnter={() => go(i)}
                       onFocus={() => go(i)}
                     >
                       <span className="truncate">{q.title}</span>

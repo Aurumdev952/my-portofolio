@@ -376,6 +376,15 @@ function Home() {
       if (!section) return
       const top = section.getBoundingClientRect().top + window.scrollY
       scrollTo(top + section.offsetHeight / 2 - window.innerHeight / 2, { immediate: true })
+      // keyboard users get a cut, not a glide: card and scene arrive with the focus
+      const k = Number(section.dataset.key)
+      story.k = k
+      story.kSmooth = k
+      if (card) {
+        card.style.opacity = '1'
+        card.style.translate = '0 0'
+        card.style.pointerEvents = ''
+      }
     }
     root.addEventListener('focusin', onFocus)
     return () => {

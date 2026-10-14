@@ -76,6 +76,20 @@ async function run(label, opts) {
     check(p('one card per stop, matching the scene'), bad.length === 0, bad.length ? bad.join(' ') : `${stops.length} stops`)
   }
 
+  // 2c. keyboard: tabbing to a station link shows its card at once
+  if (opts.reducedMotion !== 'reduce') {
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(600)
+    await page.evaluate(() => document.querySelector('#work [data-card] a')?.focus())
+    await page.waitForTimeout(300)
+    const vis = await page.evaluate(() => {
+      const a = document.activeElement
+      const card = a?.closest('[data-card]')
+      return { o: card ? parseFloat(getComputedStyle(card).opacity) : -1, inView: a ? a.getBoundingClientRect().top < innerHeight && a.getBoundingClientRect().bottom > 0 : false }
+    })
+    check(p('keyboard focus lands on a visible card'), vis.o > 0.9 && vis.inView, JSON.stringify(vis))
+  }
+
   // 3. nav: Contact hash scroll on same page
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.waitForTimeout(400)

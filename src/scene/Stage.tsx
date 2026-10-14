@@ -148,7 +148,7 @@ function Ambient({ onReady }: { onReady: () => void }) {
  * (and spark count) down when frames run long and back up when there is headroom. It only
  * touches things that never recompile a shader, so a step is never itself a hitch.
  */
-const DPR_STEPS = [1.5, 1.25, 1, 0.85, 0.7, 0.6, 0.5]
+const DPR_STEPS = [1.5, 1.25, 1, 0.85, 0.7, 0.6, 0.5, 0.42, 0.35]
 type Gov = { dpr: number; level: number; ema: number }
 declare global {
   interface Window {
@@ -271,7 +271,7 @@ export default function Stage() {
       {scene === 'gallery' && <GalleryScene quality={quality} onReady={onReady} />}
       {scene === 'ambient' && <Ambient onReady={onReady} />}
       {!qaOff('post') && <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom mipmapBlur levels={5} intensity={quality === 'high' ? 1.05 : 0.85} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />
+        <Bloom mipmapBlur levels={5} resolutionScale={0.5} intensity={quality === 'high' ? 1.05 : 0.85} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />
         <Vignette eskil={false} offset={0.22} darkness={0.75} />
         <Noise opacity={0.045} premultiply />
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />

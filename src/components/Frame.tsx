@@ -63,8 +63,8 @@ export function Frame() {
         className="frame-corner frame-corner--bottom pointer-events-none bottom-0 left-0 right-0 flex items-end justify-between px-[var(--gutter)] pb-4 [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]"
         aria-hidden="true"
       >
-        <span className="mono text-[var(--ink)]">{label}</span>
-        <span className="mono hidden text-right text-[var(--ink)] sm:block">
+        {label && <span className="mono bg-[rgba(11,12,14,0.72)] px-2 py-0.5 text-[var(--ink)]">{label}</span>}
+        <span className="mono hidden bg-[rgba(11,12,14,0.72)] px-2 py-0.5 text-right text-[var(--ink)] sm:block">
           {site.coords} <span className="opacity-60">·</span> <KigaliClock />
         </span>
       </div>
