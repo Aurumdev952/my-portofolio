@@ -16,6 +16,8 @@ export type PortraitData = {
   alpha: (u: number, v: number) => number
   /** sample depth 0..1 at uv */
   depthAt: (u: number, v: number) => number
+  /** bilinear depth 0..1 from the 512 px depth map (used to bake the relief geometry) */
+  depthFine: (u: number, v: number) => number
   /** local position on the relief surface for uv */
   surface: (u: number, v: number, out?: THREE.Vector3) => THREE.Vector3
 }
@@ -61,9 +63,24 @@ export function loadPortrait(): Promise<PortraitData> {
     }
     const alpha = (u: number, v: number) => cp[idx(u, v) + 3] / 255
     const depthAt = (u: number, v: number) => dp[idx(u, v)] / 255
+    const FW = 512
+    const FH = Math.round((512 * 948) / 1024)
+    const fp = readPixels(di, FW, FH)
+    const depthFine = (u: number, v: number) => {
+      const x = Math.min(FW - 1.001, Math.max(0, u * (FW - 1)))
+      const y = Math.min(FH - 1.001, Math.max(0, (1 - v) * (FH - 1)))
+      const x0 = Math.floor(x)
+      const y0 = Math.floor(y)
+      const tx = x - x0
+      const ty = y - y0
+      const at = (xx: number, yy: number) => fp[(yy * FW + xx) * 4] / 255
+      const a = at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx
+      const b = at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx
+      return a * (1 - ty) + b * ty
+    }
     const surface = (u: number, v: number, out = new THREE.Vector3()) =>
       out.set((u - 0.5) * PORTRAIT.width, v * PORTRAIT.height, depthAt(u, v) * PORTRAIT.depthScale)
-    return { color, depth, alpha, depthAt, surface }
+    return { color, depth, alpha, depthAt, depthFine, surface }
   })
   return cache
 }

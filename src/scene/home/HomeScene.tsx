@@ -3,13 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer } from '@react-three/drei'
 import * as THREE from 'three'
 import { story, useUI } from '#/motion/story'
-import { isMobile, isQA } from '#/motion/engine'
+import { isMobile, isQA, qaOff } from '#/motion/engine'
 import { loadPortrait } from '../shared/portrait'
 import type { PortraitData } from '../shared/portrait'
 import { Sparks, sparks } from '../shared/Sparks'
 import { Figure, figureState } from './Figure'
 import { Forge } from './Forge'
-import { Hangar } from './Hangar'
+import { Hangar, hangarState } from './Hangar'
 import { Conveyor, atlasReady } from './Conveyor'
 import { Stations } from './Stations'
 import { GATE_PLINTH, KEYS, KEY_INDEX } from './keys'
@@ -69,14 +69,24 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
     let alive = true
     // Compile every program now (stations, conveyor, gate) so scrolling never hitches on a
     // first-time shader compile. Hidden groups are shown for the compile, then restored.
+    const showAll = (on: boolean) => {
+      hangarState.showAll = on
+      scene.traverse((o) => {
+        if (o.userData.gate) o.visible = on || camera.position.z < -9
+      })
+    }
     const warm = () => {
       const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
       const prev = groups.map((g) => g.visible)
       groups.forEach((g) => (g.visible = true))
+      showAll(true)
       return gl
         .compileAsync(scene, camera)
         .catch(() => {})
-        .finally(() => groups.forEach((g, i) => (g.visible = prev[i])))
+        .finally(() => {
+          groups.forEach((g, i) => (g.visible = prev[i]))
+          showAll(false)
+        })
     }
     warm().finally(() => alive && onReady())
     // Second pass once every station texture and the logo atlas exist: materials that swap a
@@ -92,6 +102,7 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
       const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
       const prev = groups.map((g) => g.visible)
       groups.forEach((g) => (g.visible = true))
+      showAll(true)
       keyCam(i, probe.position, false)
       probe.lookAt(keyTgt(i, tgt, false))
       const last = gl.getRenderTarget()
@@ -99,6 +110,7 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
       gl.render(scene, probe)
       gl.setRenderTarget(last)
       groups.forEach((g, j) => (g.visible = prev[j]))
+      showAll(false)
     }
     Promise.all([...featured.map((p) => loadTexture(projectCover(p)).catch(() => null)), atlasReady]).then(() => {
       if (!alive) return
@@ -193,18 +205,19 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
       <fogExp2 attach="fog" args={['#0b0c0e', 0.05]} />
       <hemisphereLight args={['#9fb4d6', '#0b0c0e', 0.45]} />
       <pointLight ref={key} intensity={7} distance={12} decay={1.4} color="#e8eefc" />
-      <Environment resolution={128} frames={1} environmentIntensity={0.55}>
+      {/* one fixed directional light: cheap, always on, so the light count never changes */}
+      <directionalLight position={[2, 6, 8]} intensity={1.1} color="#ffe2c4" />
+      {!qaOff('env') && <Environment resolution={128} frames={1} environmentIntensity={0.55}>
         <Lightformer form="rect" intensity={3} color="#cfdcff" position={[0, 6, -6]} scale={[12, 3, 1]} />
         <Lightformer form="rect" intensity={1.6} color="#ffd6b0" position={[-6, 3, 4]} rotation-y={Math.PI / 2} scale={[8, 2, 1]} />
         <Lightformer form="rect" intensity={1.2} color="#9fb4d6" position={[6, 2, 2]} rotation-y={-Math.PI / 2} scale={[8, 2, 1]} />
         <Lightformer form="ring" intensity={2.5} color="#ff9a3c" position={[0, 1.5, 2.5]} scale={1.2} />
-      </Environment>
-      <Hangar quality={quality} />
-      <group ref={forgeGroup}>{data && <Forge data={data} quality={quality} active={forgeActive} />}</group>
+      </Environment>}
+      {!qaOff('hangar') && <Hangar quality={quality} />}
+      <group ref={forgeGroup}>{data && !qaOff('forge') && <Forge data={data} quality={quality} active={forgeActive} />}</group>
       <group ref={conveyorGroup}>
         <Conveyor />
       </group>
-      <pointLight position={[0, 2.3, -6.4]} intensity={10} distance={6} color="#ffd2a1" />
       <group ref={stationsGroup}>
         <Stations />
       </group>
@@ -213,8 +226,8 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
         <cylinderGeometry args={[0.75, 0.85, GATE_PLINTH.h, 48]} />
         <meshStandardMaterial color="#1c1e22" metalness={0.8} roughness={0.4} />
       </mesh>
-      <group ref={figure}>{data && <Figure data={data} quality={quality} />}</group>
-      <Sparks />
+      <group ref={figure}>{data && !qaOff('figure') && <Figure data={data} quality={quality} />}</group>
+      {!qaOff('sparks') && <Sparks />}
     </>
   )
 }

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { HEAT, NOISE } from '../shared/glsl'
+import { qaOff } from '#/motion/engine'
 import { PORTRAIT } from '../shared/portrait'
 import type { PortraitData } from '../shared/portrait'
 
@@ -35,18 +36,15 @@ varying vec3 vN;
 varying vec3 vView;
 varying vec3 vLocal;
 varying float vDepth;
+// The relief is baked into the geometry at load (position.z and normals), so the vertex
+// shader reads no textures at all.
+attribute float aDepth;
 void main(){
   vUv = uv;
-  float d = texture2D(uDepth, uv).r;
   vec3 p = position;
-  p.z += d * uDepthScale;
-  float e = 1.5 / 512.;
-  float dx = texture2D(uDepth, uv + vec2(e, 0.)).r - texture2D(uDepth, uv - vec2(e, 0.)).r;
-  float dy = texture2D(uDepth, uv + vec2(0., e)).r - texture2D(uDepth, uv - vec2(0., e)).r;
-  vec3 n = normalize(vec3(-dx * uDepthScale / (2. * e * uSize.x), -dy * uDepthScale / (2. * e * uSize.y), 1.));
-  vN = normalize(normalMatrix * n);
+  vN = normalize(normalMatrix * normal);
   vLocal = p;
-  vDepth = d;
+  vDepth = aDepth;
   vec4 mv = modelViewMatrix * vec4(p, 1.);
   vView = -mv.xyz;
   gl_Position = projectionMatrix * mv;
@@ -88,47 +86,68 @@ void main(){
     float halo = exp(-dist * dist / 0.012) * uWeld[i].w * .35;
     weld += heatRamp(.75 + spot * .25) * spot * 3. + heatRamp(.35) * halo;
   }
-  // Seams that have been welded keep a faint glow while hot
-  float sn = fbm(vec3(vLocal.xy * 3.2, 1.7));
-  float seam = smoothstep(.49, .5, sn) * (1. - smoothstep(.5, .512, sn));
+  // Every phase is computed only while its weight is non zero. The weights come from a
+  // uniform, so the whole draw takes the same branch and skipped noise costs nothing.
+  vec3 col = vec3(0.);
+  float sum = 1e-4;
 
-  // 1. Silhouette: soot black, rim lit by the arc light behind
-  vec3 sil = vec3(0.012) + rim * mix(uArc, uHeat, .25) * 1.15 + weld + heatRamp(.45) * seam * 0.55 * clamp(1. - f * 4., 0., 1.);
+  // 1. Silhouette: soot black, rim lit by the arc light behind, faint welded seams
+  if (wSil > 0.001) {
+    float seam = 0.;
+    if (f < 0.25) {
+      float sn = fbm(vec3(vLocal.xy * 3.2, 1.7));
+      seam = smoothstep(.49, .5, sn) * (1. - smoothstep(.5, .512, sn));
+    }
+    vec3 sil = vec3(0.012) + rim * mix(uArc, uHeat, .25) * 1.15 + weld + heatRamp(.45) * seam * 0.55 * clamp(1. - f * 4., 0., 1.);
+    col += sil * wSil; sum += wSil;
+  }
 
   // 2. Blueprint: depth contour lines in arc blue
-  float lines = abs(fract(vDepth * 38. - uTime * .05) - .5);
-  float lw = fwidth(vDepth * 38.) * 1.2;
-  float contour = 1. - smoothstep(0., lw, lines - .02);
-  float scan = smoothstep(.985, 1., sin(vUv.y * 420.)) * .25;
-  vec3 bp = vec3(.006, .01, .02) + uArc * (contour * .9 + scan) + rim * uArc * .55 + weld * .6;
+  if (wBp > 0.001) {
+    float lines = abs(fract(vDepth * 38. - uTime * .05) - .5);
+    float lw = fwidth(vDepth * 38.) * 1.2;
+    float contour = 1. - smoothstep(0., lw, lines - .02);
+    float scan = smoothstep(.985, 1., sin(vUv.y * 420.)) * .25;
+    vec3 bp = vec3(.006, .01, .02) + uArc * (contour * .9 + scan) + rim * uArc * .55 + weld * .6;
+    col += bp * wBp; sum += wBp;
+  }
 
-  // 3. Hot metal cooling into skin: a crack network that recedes as it cools
-  float n = fbm(vec3(vLocal.xy * 2.6, uTime * .08));
-  float cool = smoothstep(.66, .95, f);
-  float crackLine = 1. - smoothstep(0., .07, abs(n - .5));
-  float temp = clamp(crackLine * (1. - cool) * 1.1 + (1. - cool) * .18, 0., 1.);
-  vec3 lum = vec3(dot(tex.rgb, vec3(.299, .587, .114)));
-  vec3 hot = mix(lum * .7, tex.rgb, cool) * (.55 + .35 * ndv) + heatRamp(temp) * pow(temp, 1.4) * 2.2 + rim * uHeat * (1. - cool) * .5;
+  // 3. Spark phase: soot with burning cracks
+  if (wSpark > 0.001) {
+    float crack = smoothstep(.55, .6, fbm(vec3(vLocal.xy * 5., uTime * .4)));
+    vec3 spark = vec3(.02) + heatRamp(.6 + crack * .4) * crack * 1.4 + rim * uHeat * .4;
+    col += spark * wSpark; sum += wSpark;
+  }
 
-  // 4. Real: lit portrait
-  vec3 L = normalize(vec3(.35, .6, .9));
-  float diff = max(dot(N, L), 0.);
-  vec3 real = tex.rgb * (.62 + .5 * diff) + rim * uArc * .28;
+  // 4. Hot metal cooling into skin: a crack network that recedes as it cools
+  if (wHot > 0.001) {
+    float n = fbm(vec3(vLocal.xy * 2.6, uTime * .08));
+    float cool = smoothstep(.66, .95, f);
+    float crackLine = 1. - smoothstep(0., .07, abs(n - .5));
+    float temp = clamp(crackLine * (1. - cool) * 1.1 + (1. - cool) * .18, 0., 1.);
+    vec3 lum = vec3(dot(tex.rgb, vec3(.299, .587, .114)));
+    vec3 hot = mix(lum * .7, tex.rgb, cool) * (.55 + .35 * ndv) + heatRamp(temp) * pow(temp, 1.4) * 2.2 + rim * uHeat * (1. - cool) * .5;
+    col += hot * wHot; sum += wHot;
+  }
 
-  // Spark phase: soot with burning cracks
-  float crack = smoothstep(.55, .6, fbm(vec3(vLocal.xy * 5., uTime * .4)));
-  vec3 spark = vec3(.02) + heatRamp(.6 + crack * .4) * crack * 1.4 + rim * uHeat * .4;
-
-  float sum = wSil + wBp + wSpark + wHot + wReal + 1e-4;
-  vec3 col = (sil * wSil + bp * wBp + spark * wSpark + hot * wHot + real * wReal) / sum;
+  // 5. Real: lit portrait
+  if (wReal > 0.001) {
+    vec3 L = normalize(vec3(.35, .6, .9));
+    float diff = max(dot(N, L), 0.);
+    vec3 real = tex.rgb * (.62 + .5 * diff) + rim * uArc * .28;
+    col += real * wReal; sum += wReal;
+  }
+  col /= sum;
 
   // Dissolve with a burning edge (spark phase and teleports)
   float dis = max(uDissolve, wSpark * .42);
-  float dn = fbm(vec3(vLocal.xy * 6., 3.1)) * .9 + vUv.y * .1;
-  float cut = dis * 1.08 - .02;
-  if (dn < cut) discard;
-  float edge = 1. - smoothstep(0., .05, dn - cut);
-  col += heatRamp(.8) * edge * step(.001, dis) * 2.2;
+  if (dis > 0.001) {
+    float dn = fbm(vec3(vLocal.xy * 6., 3.1)) * .9 + vUv.y * .1;
+    float cut = dis * 1.08 - .02;
+    if (dn < cut) discard;
+    float edge = 1. - smoothstep(0., .05, dn - cut);
+    col += heatRamp(.8) * edge * 2.2;
+  }
 
   // feathered silhouette edge; the bust melts into its pedestal instead of a hard crop
   float base = smoothstep(0.0, 0.1, vUv.y);
@@ -141,14 +160,12 @@ void main(){
 const POINTS_VERT = /* glsl */ `
 ${COMMON}
 attribute float aSeed;
+attribute float aDepth;
 uniform float uPixel;
 varying float vAlpha;
 varying float vTemp;
 void main(){
-  vec2 uv0 = uv;
-  float d = texture2D(uDepth, uv0).r;
   vec3 base = position;
-  base.z += d * uDepthScale;
   float wSpark = bell(uForge, 0.44, 0.56, 0.62, 0.74);
   float amt = max(wSpark * .22, uDissolve);
   float vis = max(wSpark, uDissolve);
@@ -185,19 +202,35 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
     const segY = Math.round(segX * (PORTRAIT.height / PORTRAIT.width))
     const geometry = new THREE.PlaneGeometry(PORTRAIT.width, PORTRAIT.height, segX, segY)
     geometry.translate(0, PORTRAIT.height / 2, 0)
+    // bake the relief once: depth into z, then normals from the displaced grid
+    {
+      const pa = geometry.attributes.position as THREE.BufferAttribute
+      const ua = geometry.attributes.uv as THREE.BufferAttribute
+      const depthArr = new Float32Array(pa.count)
+      for (let k = 0; k < pa.count; k++) {
+        const d = data.depthFine(ua.getX(k), ua.getY(k))
+        depthArr[k] = d
+        pa.setZ(k, d * PORTRAIT.depthScale)
+      }
+      geometry.setAttribute('aDepth', new THREE.BufferAttribute(depthArr, 1))
+      geometry.computeVertexNormals()
+    }
 
     // Points: sample the masked surface
     const stepU = quality === 'high' ? 1 / 150 : 1 / 100
     const pos: number[] = []
     const uv: number[] = []
     const seed: number[] = []
+    const depthP: number[] = []
     for (let v = 0; v <= 1; v += stepU * (PORTRAIT.width / PORTRAIT.height)) {
       for (let u = 0; u <= 1; u += stepU) {
         const ju = u + (Math.random() - 0.5) * stepU
         const jv = v + (Math.random() - 0.5) * stepU
         if (data.alpha(ju, jv) < 0.6) continue
-        pos.push((ju - 0.5) * PORTRAIT.width, jv * PORTRAIT.height, 0)
+        const d = data.depthFine(ju, jv)
+        pos.push((ju - 0.5) * PORTRAIT.width, jv * PORTRAIT.height, d * PORTRAIT.depthScale)
         uv.push(ju, jv)
+        depthP.push(d)
         seed.push(Math.random())
       }
     }
@@ -205,6 +238,7 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
     pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
     pg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
     pg.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1))
+    pg.setAttribute('aDepth', new THREE.Float32BufferAttribute(depthP, 1))
     pg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, PORTRAIT.height / 2, 0), 4)
 
     const uniforms = {
@@ -229,7 +263,8 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
         uniforms,
         vertexShader: MESH_VERT,
         fragmentShader: MESH_FRAG,
-        side: THREE.DoubleSide,
+        // front only: a two sided transparent material is drawn twice
+        side: THREE.FrontSide,
         transparent: true,
         depthWrite: true,
       }),
@@ -250,6 +285,10 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
 
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime
+    const f = figureState.forge
+    // the cloud stays in the scene (so its shader is warmed up) but draws nothing when unseen
+    const on = figureState.dissolve > 0.002 || (f > 0.44 && f < 0.74)
+    points.setDrawRange(0, on ? Infinity : 0)
     uniforms.uForge.value = figureState.forge
     uniforms.uDissolve.value = figureState.dissolve
     uniforms.uPixel.value = state.viewport.dpr * (state.size.height / 900) * 1.4
@@ -257,7 +296,7 @@ export function Figure({ data, quality }: { data: PortraitData; quality: 'high' 
 
   return (
     <group>
-      <mesh geometry={geometry} material={meshMat} frustumCulled={false} />
+      <mesh geometry={geometry} material={meshMat} frustumCulled={false} visible={!qaOff('figmesh')} />
       <points geometry={points} material={pointsMat} frustumCulled={false} />
     </group>
   )
