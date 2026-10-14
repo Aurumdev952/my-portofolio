@@ -15,7 +15,8 @@
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "assets": "node scripts/prepare-portrait.mjs && node scripts/shoot-sites.mjs"
+    "assets": "node scripts/prepare-portrait.mjs && node scripts/shoot-sites.mjs",
+    "og": "node scripts/build-og.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

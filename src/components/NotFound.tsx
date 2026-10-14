@@ -10,6 +10,8 @@ export function NotFound() {
   }, [])
   return (
     <section ref={ref} className="relative flex min-h-[100svh] flex-col justify-center px-[var(--gutter)] pb-[8svh] pt-[16svh] sm:justify-end sm:pb-[14svh]">
+      {/* React hoists this into <head>: keep missing pages out of search results */}
+      <meta name="robots" content="noindex" />
       <p className="mono mb-6 text-[var(--heat)]" data-reveal="fade" data-intro>
         Error 404
       </p>
