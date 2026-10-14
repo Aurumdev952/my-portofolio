@@ -6,8 +6,8 @@ import { useUI } from '#/motion/story'
 const MIN_MS = 800
 const MAX_MS = 1400
 
-/** Loader. Progress is real: fonts, the portrait textures and the 3D scene. */
-export function Doors({ waitForGl }: { waitForGl: boolean }) {
+/** Loader. Progress is real: fonts and the portrait textures the 3D figure needs. */
+export function Doors() {
   const countRef = useRef<HTMLSpanElement>(null)
   const beadRef = useRef<HTMLDivElement>(null)
 
@@ -20,7 +20,8 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
     const start = performance.now()
     let fontsDone = false
     let imagesDone = 0
-    const images = ['/portrait/color.webp', '/portrait/depth.webp']
+    // the static fallback does not need the 3D textures, so it does not wait for them
+    const images = document.documentElement.classList.contains('gl-try') ? ['/portrait/color.webp', '/portrait/depth.webp'] : []
     document.fonts.ready.then(() => (fontsDone = true))
     images.forEach((src) => {
       const img = new Image()
@@ -31,8 +32,7 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
     let opened = false
     const tick = () => {
       const elapsed = performance.now() - start
-      const gl = !waitForGl || useUI.getState().glReady || !document.documentElement.classList.contains('gl-try')
-      const real = ((fontsDone ? 1 : 0) + imagesDone / images.length + (gl ? 1 : 0)) / 3
+      const real = ((fontsDone ? 1 : 0) + (images.length ? imagesDone / images.length : 1)) / 2
       const timeCap = Math.min(1, elapsed / MAX_MS)
       const target = Math.max(real, timeCap) * Math.min(1, elapsed / MIN_MS)
       shown.v += (target - shown.v) * 0.18
