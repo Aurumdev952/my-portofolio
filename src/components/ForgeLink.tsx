@@ -25,6 +25,8 @@ export function ForgeLink(props: LinkComponentProps<'a'> & { scrollHash?: string
     }
     e.preventDefault()
     transition.pending = true
+    // from now on every page plays its intro behind the doors
+    document.documentElement.classList.remove('no-intro')
     await closeDoors()
     await router.navigate({ href: url.pathname + url.search + url.hash })
   }
