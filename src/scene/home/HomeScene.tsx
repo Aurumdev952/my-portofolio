@@ -88,16 +88,16 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
           showAll(false)
         })
     }
-    warm().finally(() => alive && onReady())
     // Second pass once every station texture and the logo atlas exist: materials that swap a
     // placeholder for the real map get their final program now, not on first sight.
-    // Then draw every story viewpoint once into a tiny hidden target, one per idle slot: this
-    // compiles the exact draw paths (two-sided transparency, instancing, points) the real
-    // frames will use, so the first scroll through the story never waits on the GPU driver.
+    // Then draw every story viewpoint once into a tiny hidden target: this compiles the exact
+    // draw paths (two-sided transparency, instancing, points) the real frames will use, so the
+    // first scroll through the story never waits on the GPU driver.
+    // All of it runs behind the loader doors: onReady fires once it is done (or after a cap, so
+    // a slow texture never holds the page), and the doors open on a scene that is already warm.
     const timers: number[] = []
     const rt = new THREE.WebGLRenderTarget(64, 64)
     const probe = new THREE.PerspectiveCamera(35, 1.6, 0.1, 90)
-    const viewpoints = KEYS.map((_, i) => i)
     const drawViewpoint = (i: number) => {
       const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
       const prev = groups.map((g) => g.visible)
@@ -112,12 +112,29 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
       groups.forEach((g, j) => (g.visible = prev[j]))
       showAll(false)
     }
-    Promise.all([...featured.map((p) => loadTexture(projectCover(p)).catch(() => null)), atlasReady]).then(() => {
-      if (!alive) return
-      warm().finally(() => {
-        viewpoints.forEach((i, n) => timers.push(window.setTimeout(() => alive && drawViewpoint(i), 120 + n * 90)))
-      })
-    })
+    const pause = (ms: number) => new Promise<void>((r) => timers.push(window.setTimeout(r, ms)))
+    const drawAll = async () => {
+      for (let i = 0; i < KEYS.length; i++) {
+        if (!alive) return
+        drawViewpoint(i)
+        await pause(16)
+      }
+    }
+    const textures = Promise.all([...featured.map((p) => loadTexture(projectCover(p)).catch(() => null)), atlasReady])
+    const first = warm()
+    const full = first
+      .then(() => textures)
+      .then(() => (alive ? warm() : undefined))
+      .then(() => (alive ? drawAll() : undefined))
+    let ready = false
+    const done = () => {
+      if (ready || !alive) return
+      ready = true
+      onReady()
+    }
+    full.finally(done)
+    // a texture that never arrives must not hold the doors: go after the first compile + a cap
+    first.finally(() => alive && timers.push(window.setTimeout(done, 3500)))
     return () => {
       alive = false
       timers.forEach((t) => window.clearTimeout(t))

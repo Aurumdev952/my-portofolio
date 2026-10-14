@@ -25,8 +25,12 @@ export async function closeDoors(): Promise<void> {
 export async function openDoors(): Promise<void> {
   const el = root()
   if (!el) return
-  el.hidden = false
-  await nextFrame()
+  // already on screen (the loader): open now; waiting for frames would only add the time the
+  // first 3D frames take to draw
+  if (el.hidden) {
+    el.hidden = false
+    await nextFrame()
+  }
   el.dataset.state = 'open'
   el.style.pointerEvents = 'none'
   document.documentElement.classList.add('is-loaded')
