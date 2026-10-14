@@ -111,6 +111,7 @@ function Work() {
       await new Promise<void>((done) => gsap.to(story, { fly: 1, duration: 0.9, ease: 'expo.in', onComplete: () => done() }))
     }
     transition.pending = true
+    document.documentElement.classList.remove('no-intro')
     await closeDoors()
     await router.navigate({ to: '/work/$slug', params: { slug } })
   }

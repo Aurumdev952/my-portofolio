@@ -44,7 +44,10 @@ export function useReveal(root: RefObject<HTMLElement | null>, deps: unknown[] =
     const splits: SplitText[] = []
     const offs: (() => void)[] = []
     const ctx = gsap.context(() => {
+      // Inner pages opened directly already show their intro content: leave it in place.
+      const skipIntro = document.documentElement.classList.contains('no-intro')
       el.querySelectorAll<HTMLElement>('[data-split]').forEach((node) => {
+        if (skipIntro && node.hasAttribute('data-intro')) return
         const delay = Number(node.dataset.delay ?? 0)
         let anim: gsap.core.Tween | null = null
         let started = false
@@ -84,6 +87,7 @@ export function useReveal(root: RefObject<HTMLElement | null>, deps: unknown[] =
       })
 
       el.querySelectorAll<HTMLElement>('[data-reveal]').forEach((node) => {
+        if (skipIntro && node.hasAttribute('data-intro')) return
         const kind = node.dataset.reveal
         const delay = Number(node.dataset.delay ?? 0)
         const from =

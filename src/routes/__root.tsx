@@ -1,5 +1,5 @@
 import { HeadContent, Outlet, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Component, Suspense, lazy, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import appCss from '../styles.css?url'
 import { site } from '#/content/site'
@@ -7,7 +7,7 @@ import { Doors } from '#/components/Doors'
 import { Frame } from '#/components/Frame'
 import { transition } from '#/components/ForgeLink'
 import { NotFound } from '#/components/NotFound'
-import { boot, prefersReducedMotion, resizeScroll, scrollTo } from '#/motion/engine'
+import { boot, resizeScroll, scrollTo } from '#/motion/engine'
 import { openDoors } from '#/motion/doors'
 import { useUI } from '#/motion/story'
 import type { SceneName } from '#/motion/story'
@@ -16,7 +16,9 @@ const Stage = lazy(() => import('#/scene/Stage'))
 
 // Runs before first paint: flags JS + motion so hidden-before-reveal styles never flash, and
 // a safety net reveals everything if the app never boots.
-const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('motion');setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
+// It also decides WebGL before paint, so the static fallbacks never flash on capable devices,
+// and inner pages opened directly show their text at once instead of waiting for the intro.
+const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader','no-intro');var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rm)d.classList.add('motion');var sd=navigator.connection&&navigator.connection.saveData;if(!rm&&!sd){try{var c=document.createElement('canvas');if(c.getContext('webgl2')||c.getContext('webgl'))d.classList.add('gl-try')}catch(e){}}setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
 
 const personJsonLd = {
   '@context': 'https://schema.org',
@@ -84,12 +86,18 @@ function sceneFor(pathname: string, notFound: boolean): SceneName {
   return 'ambient'
 }
 
-function hasWebGL() {
-  try {
-    const c = document.createElement('canvas')
-    return !!(c.getContext('webgl2') || c.getContext('webgl'))
-  } catch {
-    return false
+/** If the 3D stage fails, drop to the designed static version instead of a blank page. */
+class GlBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch() {
+    document.documentElement.classList.remove('gl-try', 'gl-on')
+    useUI.getState().setGlReady(true)
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
   }
 }
 
@@ -102,11 +110,8 @@ function RootLayout() {
 
   useEffect(() => {
     boot()
-    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
-    if (!prefersReducedMotion() && !saveData && hasWebGL()) {
-      document.documentElement.classList.add('gl-try')
-      setGl(true)
-    }
+    // the head script already decided before paint
+    if (document.documentElement.classList.contains('gl-try')) setGl(true)
   }, [])
 
   useEffect(() => {
@@ -139,9 +144,11 @@ function RootLayout() {
       </a>
       {gl && (
         <div className="gl-canvas" aria-hidden="true">
-          <Suspense fallback={null}>
-            <Stage />
-          </Suspense>
+          <GlBoundary>
+            <Suspense fallback={null}>
+              <Stage />
+            </Suspense>
+          </GlBoundary>
         </div>
       )}
       <Frame />

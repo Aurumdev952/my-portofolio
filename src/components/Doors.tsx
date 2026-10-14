@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { gsap, prefersReducedMotion } from '#/motion/engine'
+import { prefersReducedMotion } from '#/motion/engine'
 import { openDoors, skipLoader } from '#/motion/doors'
 import { useUI } from '#/motion/story'
 
@@ -41,7 +41,7 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
       if (beadRef.current) beadRef.current.style.scale = `${shown.v} 1`
       if (!opened && (shown.v > 0.97 || elapsed > MAX_MS)) {
         opened = true
-        gsap.ticker.remove(tick)
+        window.clearInterval(id)
         useUI.getState().setLoaded(true)
         openDoors()
       }
@@ -53,8 +53,8 @@ export function Doors({ waitForGl }: { waitForGl: boolean }) {
       })
       return
     }
-    gsap.ticker.add(tick)
-    return () => gsap.ticker.remove(tick)
+    const id = window.setInterval(tick, 40)
+    return () => window.clearInterval(id)
   }, [])
 
   return (
