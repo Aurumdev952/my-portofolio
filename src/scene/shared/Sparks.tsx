@@ -86,12 +86,10 @@ export function Sparks() {
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 1 / 30)
+    // live sparks are packed to the front of the buffer and only those are drawn
+    let n = 0
     for (let i = 0; i < MAX; i++) {
-      const o = i * 6
-      if (life[i] <= 0) {
-        col[o] = col[o + 1] = col[o + 2] = col[o + 3] = col[o + 4] = col[o + 5] = 0
-        continue
-      }
+      if (life[i] <= 0) continue
       life[i] -= dt
       const j = i * 3
       v[j + 1] -= 9.8 * dt
@@ -111,22 +109,31 @@ export function Sparks() {
       if (t > 0.6) tmp.copy(mid).lerp(hot, (t - 0.6) / 0.4)
       else tmp.copy(cold).lerp(mid, t / 0.6)
       const k = 0.028
+      const o = n * 6
       pos[o] = p[j]
       pos[o + 1] = p[j + 1]
       pos[o + 2] = p[j + 2]
       pos[o + 3] = p[j] - v[j] * k
       pos[o + 4] = p[j + 1] - v[j + 1] * k
       pos[o + 5] = p[j + 2] - v[j + 2] * k
-      const b = 1.6 * t
-      col[o] = tmp.r * b * 2
-      col[o + 1] = tmp.g * b * 2
-      col[o + 2] = tmp.b * b * 2
-      col[o + 3] = tmp.r * b * 0.4
-      col[o + 4] = tmp.g * b * 0.4
-      col[o + 5] = tmp.b * b * 0.4
+      const br = 1.6 * t
+      col[o] = tmp.r * br * 2
+      col[o + 1] = tmp.g * br * 2
+      col[o + 2] = tmp.b * br * 2
+      col[o + 3] = tmp.r * br * 0.4
+      col[o + 4] = tmp.g * br * 0.4
+      col[o + 5] = tmp.b * br * 0.4
+      n++
     }
-    geom.attributes.position.needsUpdate = true
-    geom.attributes.color.needsUpdate = true
+    geom.setDrawRange(0, n * 2)
+    const pa = geom.attributes.position as THREE.BufferAttribute
+    const ca = geom.attributes.color as THREE.BufferAttribute
+    pa.clearUpdateRanges()
+    ca.clearUpdateRanges()
+    pa.addUpdateRange(0, n * 6)
+    ca.addUpdateRange(0, n * 6)
+    pa.needsUpdate = true
+    ca.needsUpdate = true
   })
 
   return <lineSegments geometry={geom} material={mat} frustumCulled={false} />

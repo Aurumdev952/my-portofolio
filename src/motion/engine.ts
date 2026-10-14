@@ -13,6 +13,9 @@ export const isTouch = () => isBrowser && window.matchMedia('(hover: none)').mat
 export const isMobile = () => isBrowser && window.matchMedia('(max-width: 760px)').matches
 /** ?qa in the URL: screenshots in slow software GL see final states, not lagging ones */
 export const isQA = () => isBrowser && new URLSearchParams(window.location.search).has('qa')
+/** QA profiling: ?qa&off=forge,figure,post to switch scene parts off */
+export const qaOff = (part: string) =>
+  isQA() && (new URLSearchParams(window.location.search).get('off') ?? '').split(',').includes(part)
 
 export const ease = {
   out: 'expo.out',

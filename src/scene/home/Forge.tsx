@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import { RobotArm } from './RobotArm'
+import { qaOff } from '#/motion/engine'
 import type { ArmDrive } from './RobotArm'
 import { figureState } from './Figure'
 import { Glow, LightShaft } from './Hangar'
@@ -119,13 +120,12 @@ export function Forge({ data, quality, active }: { data: PortraitData; quality: 
         <meshBasicMaterial color="#c2560f" toneMapped={false} />
       </mesh>
       {ARM_BASES.slice(0, armCount).map((p, i) => (
-        <RobotArm key={i} position={p} drive={drives[i]} lights={quality === 'high' || i < 2} />
+        <RobotArm key={i} position={p} drive={drives[i]} lights={i < 2} />
       ))}
       {/* back light that turns the figure into a silhouette */}
       <Glow position={[0, 2.2, -2.6]} scale={[7, 7]} color="#9fc2ff" opacity={0.55} />
-      <LightShaft position={[0, 4.6, 0]} height={9} radius={2.2} strength={0.12} />
+      {!qaOff('shaft') && <LightShaft position={[0, 4.6, 0]} height={9} radius={2.2} strength={0.12} />}
       <Glow position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[6, 4]} color="#ff7a1a" opacity={0.12} />
-      <spotLight position={[0, 9, 4]} angle={0.4} penumbra={0.8} intensity={60} distance={18} decay={1.6} color="#dfe8ff" />
       <pointLight position={[0, 2.4, -2.2]} intensity={14} distance={7} color="#9fc2ff" />
     </group>
   )
