@@ -11,7 +11,7 @@ type Share = {
   type?: 'website' | 'article' | 'profile'
 }
 
-export const HOME_CARD_ALT = `${site.name}, software engineer, as a silhouette being welded by robot arms in a dark hangar`
+export const HOME_CARD_ALT = `${site.name}, ${site.role.toLowerCase()} in Kigali: portrait with stack logos floating around it, plus GitHub and LinkedIn handles`
 
 /** The tags every share preview reads (Open Graph for most apps, twitter:* for X and Slack). */
 export function share({ title, description, path = '', image = '/og.jpg', imageAlt = HOME_CARD_ALT, type = 'website' }: Share) {
