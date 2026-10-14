@@ -10,12 +10,11 @@ import { Sparks, sparks } from '../shared/Sparks'
 import { Figure, figureState } from './Figure'
 import { Forge } from './Forge'
 import { Hangar } from './Hangar'
-import { Conveyor } from './Conveyor'
+import { Conveyor, atlasReady } from './Conveyor'
 import { Stations } from './Stations'
 import { GATE_PLINTH, KEYS, KEY_INDEX } from './keys'
 import { featured } from '#/content/site'
 import { loadTexture, projectCover } from '../shared/textures'
-import { atlasReady } from './Conveyor'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const v = new THREE.Vector3()
