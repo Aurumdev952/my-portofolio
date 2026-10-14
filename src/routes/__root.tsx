@@ -18,7 +18,7 @@ const Stage = lazy(() => import('#/scene/Stage'))
 // a safety net reveals everything if the app never boots.
 // It also decides WebGL before paint, so the static fallbacks never flash on capable devices,
 // and inner pages opened directly show their text at once instead of waiting for the intro.
-const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader','no-intro');var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rm)d.classList.add('motion');var sd=(navigator.connection&&navigator.connection.saveData)||/[?&]nogl/.test(location.search);if(!rm&&!sd){try{var c=document.createElement('canvas');if(c.getContext('webgl2')||c.getContext('webgl'))d.classList.add('gl-try')}catch(e){}}setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
+const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader','no-intro');var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rm)d.classList.add('motion');var sd=(navigator.connection&&navigator.connection.saveData)||/[?&]nogl/.test(location.search);if(!rm&&!sd){try{var c=document.createElement('canvas');if(c.getContext('webgl2')||c.getContext('webgl'))d.classList.add('gl-try')}catch(e){}}setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},9000)})();`
 
 const personJsonLd = {
   '@context': 'https://schema.org',
@@ -106,7 +106,6 @@ function RootLayout() {
   const hash = useRouterState({ select: (s) => s.location.hash })
   const notFound = useRouterState({ select: (s) => s.matches.some((m) => m.status === 'notFound') })
   const [gl, setGl] = useState(false)
-  const loaded = useUI((s) => s.loaded)
   const scene = sceneFor(pathname, notFound)
 
   useEffect(() => {
@@ -134,8 +133,22 @@ function RootLayout() {
 
   useEffect(() => {
     if (!hash || transition.pending) return
-    const id = window.setTimeout(() => scrollTo(`#${hash}`), useUI.getState().loaded ? 0 : 2600)
-    return () => window.clearTimeout(id)
+    // first visit: the loader may hold while the 3D warms up, so scroll once the doors open
+    let id = 0
+    const go = (delay: number) => (id = window.setTimeout(() => scrollTo(`#${hash}`), delay))
+    if (useUI.getState().loaded) {
+      go(0)
+      return () => window.clearTimeout(id)
+    }
+    const off = useUI.subscribe((s) => {
+      if (!s.loaded) return
+      off()
+      go(900)
+    })
+    return () => {
+      off()
+      window.clearTimeout(id)
+    }
   }, [])
 
   return (
@@ -143,9 +156,9 @@ function RootLayout() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      {/* The 3D hangar mounts as the doors open and fades in: text paints first, the
-          shader work never holds the loader. */}
-      {gl && loaded && (
+      {/* The 3D hangar mounts at once and warms up behind the loader doors, so the first
+          thing seen is the finished scene, not shaders compiling. */}
+      {gl && (
         <div className="gl-canvas" aria-hidden="true">
           <GlBoundary>
             <Suspense fallback={null}>

@@ -6,8 +6,10 @@ import { useUI } from '#/motion/story'
 
 const MIN_MS = 800
 const MAX_MS = 1400
+/** the 3D warm-up gets this long behind the doors; after it the page opens on the poster */
+const GL_CAP_MS = 6500
 
-/** Loader. Progress is real: fonts and the portrait textures the 3D figure needs. */
+/** Loader. Progress is real: fonts, the portrait textures, then the 3D scene warming up. */
 export function Doors() {
   const countRef = useRef<HTMLSpanElement>(null)
   const beadRef = useRef<HTMLDivElement>(null)
@@ -47,7 +49,8 @@ export function Doors() {
     let fontsDone = false
     let imagesDone = 0
     // the static fallback does not need the 3D textures, so it does not wait for them
-    const images = document.documentElement.classList.contains('gl-try') ? ['/portrait/color.webp', '/portrait/depth.webp'] : []
+    const withGl = html.classList.contains('gl-try')
+    const images = withGl ? ['/portrait/color.webp', '/portrait/depth.webp'] : []
     document.fonts.ready.then(() => (fontsDone = true))
     images.forEach((src) => {
       const img = new Image()
@@ -56,16 +59,25 @@ export function Doors() {
     })
     const shown = { v: 0 }
     let opened = false
+    let last = start
     const tick = () => {
-      const elapsed = performance.now() - start
-      const real = ((fontsDone ? 1 : 0) + (images.length ? imagesDone / images.length : 1)) / 2
-      const timeCap = Math.min(1, elapsed / MAX_MS)
+      const now = performance.now()
+      const elapsed = now - start
+      // time-based easing: a busy main thread (3D warming up) cannot slow the bar's finish
+      const ease = 1 - Math.exp(-(now - last) / 200)
+      last = now
+      const glDone = !withGl || useUI.getState().glReady
+      const assets = ((fontsDone ? 1 : 0) + (images.length ? imagesDone / images.length : 1)) / 2
+      const real = withGl ? assets * 0.4 + (glDone ? 0.6 : 0) : assets
+      // time keeps the bar moving while the scene warms up, but only the real finish fills it
+      const timeCap = withGl ? Math.min(0.9, elapsed / 2600) : Math.min(1, elapsed / MAX_MS)
       const target = Math.max(real, timeCap) * Math.min(1, elapsed / MIN_MS)
-      shown.v += (target - shown.v) * 0.18
+      shown.v += (target - shown.v) * ease
       const p = Math.min(100, Math.round(shown.v * 100))
       if (countRef.current) countRef.current.textContent = String(p).padStart(3, '0')
       if (beadRef.current) beadRef.current.style.scale = `${shown.v} 1`
-      if (!opened && (shown.v > 0.97 || elapsed > MAX_MS)) {
+      const finished = withGl ? glDone && shown.v > 0.97 : shown.v > 0.97 || elapsed > MAX_MS
+      if (!opened && (finished || elapsed > GL_CAP_MS)) {
         opened = true
         window.clearInterval(id)
         useUI.getState().setLoaded(true)
