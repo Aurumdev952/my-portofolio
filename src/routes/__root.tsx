@@ -18,7 +18,7 @@ const Stage = lazy(() => import('#/scene/Stage'))
 // a safety net reveals everything if the app never boots.
 // It also decides WebGL before paint, so the static fallbacks never flash on capable devices,
 // and inner pages opened directly show their text at once instead of waiting for the intro.
-const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader','no-intro');var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rm)d.classList.add('motion');var sd=navigator.connection&&navigator.connection.saveData;if(!rm&&!sd){try{var c=document.createElement('canvas');if(c.getContext('webgl2')||c.getContext('webgl'))d.classList.add('gl-try')}catch(e){}}setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
+const HEAD_SCRIPT = `(function(){var d=document.documentElement;d.classList.add('js');if(location.pathname!=='/')d.classList.add('skip-loader','no-intro');var rm=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rm)d.classList.add('motion');var sd=(navigator.connection&&navigator.connection.saveData)||/[?&]nogl/.test(location.search);if(!rm&&!sd){try{var c=document.createElement('canvas');if(c.getContext('webgl2')||c.getContext('webgl'))d.classList.add('gl-try')}catch(e){}}setTimeout(function(){if(!d.classList.contains('is-loaded')){d.classList.add('is-revealed-all','is-loaded');var x=document.getElementById('loader');if(x)x.style.display='none'}},6000)})();`
 
 const personJsonLd = {
   '@context': 'https://schema.org',

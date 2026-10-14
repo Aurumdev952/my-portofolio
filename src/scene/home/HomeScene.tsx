@@ -13,6 +13,9 @@ import { Hangar } from './Hangar'
 import { Conveyor } from './Conveyor'
 import { Stations } from './Stations'
 import { GATE_PLINTH, KEYS, KEY_INDEX } from './keys'
+import { featured } from '#/content/site'
+import { loadTexture, projectCover } from '../shared/textures'
+import { atlasReady } from './Conveyor'
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const v = new THREE.Vector3()
@@ -67,17 +70,47 @@ export function HomeScene({ quality, onReady }: { quality: 'high' | 'low'; onRea
     let alive = true
     // Compile every program now (stations, conveyor, gate) so scrolling never hitches on a
     // first-time shader compile. Hidden groups are shown for the compile, then restored.
-    const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
-    const prev = groups.map((g) => g.visible)
-    groups.forEach((g) => (g.visible = true))
-    gl.compileAsync(scene, camera)
-      .catch(() => {})
-      .finally(() => {
-        groups.forEach((g, i) => (g.visible = prev[i]))
-        if (alive) onReady()
+    const warm = () => {
+      const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
+      const prev = groups.map((g) => g.visible)
+      groups.forEach((g) => (g.visible = true))
+      return gl
+        .compileAsync(scene, camera)
+        .catch(() => {})
+        .finally(() => groups.forEach((g, i) => (g.visible = prev[i])))
+    }
+    warm().finally(() => alive && onReady())
+    // Second pass once every station texture and the logo atlas exist: materials that swap a
+    // placeholder for the real map get their final program now, not on first sight.
+    // Then draw every story viewpoint once into a tiny hidden target, one per idle slot: this
+    // compiles the exact draw paths (two-sided transparency, instancing, points) the real
+    // frames will use, so the first scroll through the story never waits on the GPU driver.
+    const timers: number[] = []
+    const rt = new THREE.WebGLRenderTarget(64, 64)
+    const probe = new THREE.PerspectiveCamera(35, 1.6, 0.1, 90)
+    const viewpoints = KEYS.map((_, i) => i)
+    const drawViewpoint = (i: number) => {
+      const groups = [forgeGroup.current, conveyorGroup.current, stationsGroup.current].filter(Boolean) as THREE.Group[]
+      const prev = groups.map((g) => g.visible)
+      groups.forEach((g) => (g.visible = true))
+      keyCam(i, probe.position, false)
+      probe.lookAt(keyTgt(i, tgt, false))
+      const last = gl.getRenderTarget()
+      gl.setRenderTarget(rt)
+      gl.render(scene, probe)
+      gl.setRenderTarget(last)
+      groups.forEach((g, j) => (g.visible = prev[j]))
+    }
+    Promise.all([...featured.map((p) => loadTexture(projectCover(p)).catch(() => null)), atlasReady]).then(() => {
+      if (!alive) return
+      warm().finally(() => {
+        viewpoints.forEach((i, n) => timers.push(window.setTimeout(() => alive && drawViewpoint(i), 120 + n * 90)))
       })
+    })
     return () => {
       alive = false
+      timers.forEach((t) => window.clearTimeout(t))
+      rt.dispose()
     }
   }, [data, onReady, gl, scene, camera])
 

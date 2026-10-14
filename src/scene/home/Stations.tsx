@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 import { featured } from '#/content/site'
 import type { Project } from '#/content/site'
@@ -18,6 +17,7 @@ export const stationX = (i: number) => (i - (featured.length - 1) / 2) * STATION
 const arcMat = new THREE.MeshBasicMaterial({ color: '#bfd9ff', toneMapped: false })
 const heatMat = new THREE.MeshBasicMaterial({ color: '#ff7a1a', toneMapped: false })
 const steelMat = new THREE.MeshStandardMaterial({ color: '#1c1e22', metalness: 0.8, roughness: 0.4 })
+const edgeMat = new THREE.LineBasicMaterial({ color: '#46536a' })
 const darkMat = new THREE.MeshStandardMaterial({ color: '#0f1013', metalness: 0.6, roughness: 0.6 })
 
 function HoloScreen({ project }: { project: Project }) {
@@ -114,8 +114,12 @@ function RoutesProp() {
         <meshBasicMaterial color="#0f141c" transparent opacity={0.85} />
       </mesh>
       <gridHelper args={[3.6, 18, '#2a3a52', '#1a2433']} position={[0, 0.015, 0.2]} />
-      <Line points={c0.getPoints(120)} color="#bfd9ff" lineWidth={2} toneMapped={false} />
-      <Line points={c1.getPoints(120)} color="#ff7a1a" lineWidth={2} toneMapped={false} />
+      <mesh material={arcMat}>
+        <tubeGeometry args={[c0, 160, 0.012, 6, true]} />
+      </mesh>
+      <mesh material={heatMat}>
+        <tubeGeometry args={[c1, 160, 0.012, 6, true]} />
+      </mesh>
       {Array.from({ length: 5 }).map((_, i) => (
         <mesh key={i} ref={(m) => void (cars.current[i] = m!)} material={i % 2 ? heatMat : arcMat}>
           <boxGeometry args={[0.09, 0.05, 0.05]} />
@@ -138,8 +142,11 @@ function RoutesProp() {
 function TutorProp() {
   const docs = useRef<THREE.Mesh[]>([])
   const core = useRef<THREE.Mesh>(null)
-  const tokens = useRef<THREE.InstancedMesh>(null)
-  const m4 = useMemo(() => new THREE.Matrix4(), [])
+  const tokenGeom = useMemo(() => {
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(40 * 3), 3).setUsage(THREE.DynamicDrawUsage))
+    return g
+  }, [])
   useFrame((s) => {
     const t = s.clock.elapsedTime
     if (core.current) {
@@ -155,14 +162,12 @@ function TutorProp() {
       m.scale.setScalar(0.2 + (1 - k) * 0.8)
       m.lookAt(0, 1.3, 4)
     })
-    if (tokens.current) {
-      for (let i = 0; i < 40; i++) {
-        const k = (t * 0.35 + i / 40) % 1
-        m4.makeTranslation(0.25 + k * 1.4, 1.3 + Math.sin(i * 3.1) * 0.08 + k * 0.4, Math.cos(i * 1.3) * 0.08 - k * 0.5)
-        tokens.current.setMatrixAt(i, m4)
-      }
-      tokens.current.instanceMatrix.needsUpdate = true
+    const pos = tokenGeom.attributes.position as THREE.BufferAttribute
+    for (let i = 0; i < 40; i++) {
+      const k = (t * 0.35 + i / 40) % 1
+      pos.setXYZ(i, 0.25 + k * 1.4, 1.3 + Math.sin(i * 3.1) * 0.08 + k * 0.4, Math.cos(i * 1.3) * 0.08 - k * 0.5)
     }
+    pos.needsUpdate = true
   })
   return (
     <group position={[0.2, 0, 0.6]}>
@@ -177,9 +182,9 @@ function TutorProp() {
           <meshBasicMaterial color={i % 3 === 0 ? '#ff7a1a' : '#eceae4'} transparent opacity={0.7} side={THREE.DoubleSide} toneMapped={false} />
         </mesh>
       ))}
-      <instancedMesh ref={tokens} args={[undefined, heatMat, 40]}>
-        <boxGeometry args={[0.03, 0.03, 0.03]} />
-      </instancedMesh>
+      <points geometry={tokenGeom} frustumCulled={false}>
+        <pointsMaterial color="#ff7a1a" size={0.045} toneMapped={false} />
+      </points>
     </group>
   )
 }
@@ -230,7 +235,10 @@ function PipelineProp() {
         </mesh>
         <Glow position={[0, 0, 0]} scale={[1.2, 1.2]} opacity={0.35} />
       </group>
-      <Line points={path.getPoints(100)} color="#3a4454" lineWidth={1.5} />
+      <mesh>
+        <tubeGeometry args={[path, 120, 0.008, 5, true]} />
+        <meshBasicMaterial color="#3a4454" toneMapped={false} />
+      </mesh>
       <mesh ref={pkg} material={heatMat}>
         <boxGeometry args={[0.12, 0.12, 0.12]} />
       </mesh>
@@ -334,7 +342,7 @@ function MeshProp() {
         </mesh>
       ))}
       {edges.map(([a, b], i) => (
-        <Line key={i} points={[nodes[a], nodes[b]]} color="#46536a" lineWidth={1.2} />
+        <lineSegments key={i} geometry={new THREE.BufferGeometry().setFromPoints([nodes[a], nodes[b]])} material={edgeMat} />
       ))}
       {edges.map((_, i) => (
         <mesh key={i} ref={(m) => void (pulses.current[i] = m!)} material={i % 3 ? arcMat : heatMat}>

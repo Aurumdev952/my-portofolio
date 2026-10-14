@@ -12,7 +12,20 @@ import { Sparks } from './shared/Sparks'
 import { setTextureUploader } from './shared/textures'
 import { Glow } from './home/Hangar'
 
-type Probe = { calls: number; tris: number; programs: number; frameMs: number; frames: number; lights: number }
+type Probe = {
+  calls: number
+  tris: number
+  programs: number
+  frameMs: number
+  renderMs: number
+  updateMs: number
+  updateMax: number
+  samples: number[]
+  renders: number[]
+  programNames: string[]
+  frames: number
+  lights: number
+}
 declare global {
   interface Window {
     __forge?: Probe
@@ -26,22 +39,43 @@ function Driver() {
   const scene = useThree((s) => s.scene)
   useEffect(() => {
     const qa = isQA()
-    const probe: Probe = { calls: 0, tris: 0, programs: 0, frameMs: 0, frames: 0, lights: 0 }
+    const probe: Probe = { calls: 0, tris: 0, programs: 0, frameMs: 0, renderMs: 0, updateMs: 0, updateMax: 0, samples: [], renders: [], programNames: [], frames: 0, lights: 0 }
+    let inRender = 0
+    let depth = 0
     if (qa) {
       window.__forge = probe
       gl.info.autoReset = false
+      // time spent inside three's render (GPU submission) vs our own per-frame scene code
+      const render = gl.render.bind(gl)
+      gl.render = (s, c) => {
+        const t = performance.now()
+        depth++
+        render(s, c)
+        depth--
+        if (depth === 0) inRender += performance.now() - t
+      }
     }
     const tick = (time: number) => {
       if (!qa) return advance(time)
       gl.info.reset()
+      inRender = 0
       const t0 = performance.now()
       advance(time)
       const ms = performance.now() - t0
+      const upd = ms - inRender
       probe.frames++
       probe.frameMs += (ms - probe.frameMs) * 0.1
+      probe.renderMs += (inRender - probe.renderMs) * 0.1
+      probe.updateMs += (upd - probe.updateMs) * 0.1
+      probe.updateMax = Math.max(probe.updateMax, upd)
+      probe.samples.push(upd)
+      probe.renders.push(inRender)
+      if (probe.samples.length > 600) probe.samples.shift()
+      if (probe.renders.length > 600) probe.renders.shift()
       probe.calls = gl.info.render.calls
       probe.tris = gl.info.render.triangles
       probe.programs = gl.info.programs?.length ?? 0
+      if (probe.frames % 3 === 0) probe.programNames = (gl.info.programs ?? []).map((p) => { const q = p as unknown as { name: string; cacheKey: string }; return `${q.name}|${q.cacheKey.slice(0, 400)}` })
       if (probe.frames % 30 === 0) {
         let n = 0
         scene.traverseVisible((o) => {
