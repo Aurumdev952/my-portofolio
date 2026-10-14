@@ -106,6 +106,7 @@ function RootLayout() {
   const hash = useRouterState({ select: (s) => s.location.hash })
   const notFound = useRouterState({ select: (s) => s.matches.some((m) => m.status === 'notFound') })
   const [gl, setGl] = useState(false)
+  const loaded = useUI((s) => s.loaded)
   const scene = sceneFor(pathname, notFound)
 
   useEffect(() => {
@@ -142,7 +143,9 @@ function RootLayout() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      {gl && (
+      {/* The 3D hangar mounts as the doors open and fades in: text paints first, the
+          shader work never holds the loader. */}
+      {gl && loaded && (
         <div className="gl-canvas" aria-hidden="true">
           <GlBoundary>
             <Suspense fallback={null}>
@@ -155,7 +158,7 @@ function RootLayout() {
       <main id="main" tabIndex={-1} className="relative z-10 outline-none">
         <Outlet />
       </main>
-      <Doors waitForGl={scene === 'home'} />
+      <Doors />
     </>
   )
 }

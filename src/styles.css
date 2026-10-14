@@ -501,7 +501,7 @@ html.gl-try .nogl-only {
 }
 .gl-canvas {
   opacity: 0;
-  transition: opacity 0.8s ease;
+  transition: opacity 1.1s ease;
 }
 html.gl-on .gl-canvas {
   opacity: 1;
