@@ -1,6 +1,5 @@
 // Every visible string and project lives here.
 // Assumptions to confirm with the owner:
-// - site.url is a placeholder until the production domain is chosen.
 // - Years for Claire AI, Tello AI and Quantaledger are not on the CV, so they are left out.
 // - Government projects use generic names and abstract art (no real screens or data).
 
@@ -10,7 +9,7 @@ export const site = {
   initials: 'IMB',
   role: 'Software engineer',
   line: 'I build backends that hold under load, and I teach machines to help people learn.',
-  url: (import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://benjamin-ishimwe.vercel.app',
+  url: (import.meta.env?.VITE_SITE_URL as string | undefined) ?? 'https://ishbenjamin.is-a.dev',
   description:
     'Ishimwe Mugisha Benjamin, software engineer in Kigali. Real time backends, data pipelines, Kubernetes and RAG systems for products and public services.',
   location: 'Kigali, Rwanda',

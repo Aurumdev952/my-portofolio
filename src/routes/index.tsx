@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { chapters, featured, site, stack } from '#/content/site'
+import { share } from '#/content/seo'
 import { ForgeLink } from '#/components/ForgeLink'
 import { ContactForm } from '#/components/Contact'
 import { Logo } from '#/components/Logo'
@@ -15,9 +16,7 @@ export const Route = createFileRoute('/')({
     meta: [
       { title: `${site.name} · Software engineer in Kigali` },
       { name: 'description', content: site.description },
-      { property: 'og:title', content: `${site.name} · Software engineer` },
-      { property: 'og:description', content: site.description },
-      { property: 'og:url', content: site.url },
+      ...share({ title: `${site.name} · Software engineer`, description: site.description, type: 'profile' }),
     ],
     links: [{ rel: 'canonical', href: site.url }],
   }),

@@ -1,7 +1,7 @@
 // Writes public/sitemap.xml from the project slugs in src/content/site.ts.
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const url = (process.env.VITE_SITE_URL ?? 'https://benjamin-ishimwe.vercel.app').replace(/\/$/, '')
+const url = (process.env.VITE_SITE_URL ?? 'https://ishbenjamin.is-a.dev').replace(/\/$/, '')
 const src = readFileSync('src/content/site.ts', 'utf8')
 const slugs = [...src.matchAll(/slug: '([a-z0-9-]+)'/g)].map((m) => m[1])
 const paths = ['/', '/work', ...slugs.map((s) => `/work/${s}`)]

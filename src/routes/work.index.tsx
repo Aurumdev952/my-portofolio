@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef } from 'react'
 import { projects, site } from '#/content/site'
+import { share } from '#/content/seo'
 import { ForgeLink, transition } from '#/components/ForgeLink'
 import { useReveal } from '#/motion/reveal'
 import { gsap, onScroll, prefersReducedMotion, scrollTo } from '#/motion/engine'
@@ -16,9 +17,11 @@ export const Route = createFileRoute('/work/')({
         name: 'description',
         content: 'Ten projects by Benjamin Ishimwe: ride hailing, AI tutoring, national public sector systems, data pipelines and small language models.',
       },
-      { property: 'og:title', content: `Work · ${site.name}` },
-      { property: 'og:description', content: 'Ride hailing, AI tutoring, public sector systems, data pipelines and small language models, in one 3D gallery.' },
-      { property: 'og:url', content: `${site.url}/work` },
+      ...share({
+        title: `Work · ${site.name}`,
+        description: 'Ride hailing, AI tutoring, public sector systems, data pipelines and small language models, in one 3D gallery.',
+        path: '/work',
+      }),
     ],
     links: [{ rel: 'canonical', href: `${site.url}/work` }],
   }),
