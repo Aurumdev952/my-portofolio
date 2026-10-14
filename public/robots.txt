@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://benjamin-ishimwe.vercel.app/sitemap.xml
