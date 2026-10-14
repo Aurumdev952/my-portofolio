@@ -1,10 +1,13 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useReveal } from '#/motion/reveal'
 import { ForgeLink } from './ForgeLink'
 
 export function NotFound() {
   const ref = useRef<HTMLElement>(null)
   useReveal(ref)
+  useEffect(() => {
+    document.title = 'Page not found · Ishimwe Mugisha Benjamin'
+  }, [])
   return (
     <section ref={ref} className="relative flex min-h-[100svh] flex-col justify-end px-[var(--gutter)] pb-[14svh]">
       <p className="mono mb-6 text-[var(--heat)]" data-reveal="fade" data-intro>

@@ -71,7 +71,7 @@ export const KEYS: Key[] = [
     fig: station(i),
     forge: 0.95,
     via: i === 0 ? ([-7, 4.4, -6.2] as V3) : undefined,
-    mZoom: 1.37,
+    mZoom: 1.6,
     mDx: -0.55,
   })),
   {

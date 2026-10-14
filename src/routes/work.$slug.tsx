@@ -189,13 +189,14 @@ function CaseStudy() {
 
       <nav className="mt-32 border-t border-[var(--line)] pt-10" aria-label="Next project">
         <p className="mono text-[var(--muted)]">Next project</p>
-        <ForgeLink to="/work/$slug" params={{ slug: next.slug }} className="group mt-3 block">
-          <span className="display block text-[clamp(44px,8vw,132px)] transition-colors duration-500 group-hover:text-[var(--heat)] group-focus-visible:text-[var(--heat)]">
-            {next.title}
-            <span className="ml-4 inline-block transition-[translate] duration-500 group-hover:translate-x-4" aria-hidden="true">
+        <ForgeLink to="/work/$slug" params={{ slug: next.slug }} className="next-link group mt-3 block">
+          <span className="display relative block text-[clamp(44px,8vw,132px)]">
+            <span className="next-link__label">{next.title}</span>
+            <span className="next-link__arrow ml-4 inline-block" aria-hidden="true">
               →
             </span>
           </span>
+          <span className="next-link__bar" aria-hidden="true" />
         </ForgeLink>
         <div className="mt-10 flex flex-wrap gap-3">
           <ForgeLink to="/work" className="heat">

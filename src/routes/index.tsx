@@ -6,7 +6,7 @@ import { ContactForm } from '#/components/Contact'
 import { Logo } from '#/components/Logo'
 import { useReveal } from '#/motion/reveal'
 import { startHomeDriver } from '#/motion/homeDriver'
-import { ScrollTrigger, gsap, onScroll, onTick, prefersReducedMotion, scrollTo } from '#/motion/engine'
+import { onScroll, onTick, prefersReducedMotion, scrollTo } from '#/motion/engine'
 import { story } from '#/motion/story'
 import { artDataUri } from '#/art/systemArt'
 
@@ -26,6 +26,11 @@ export const Route = createFileRoute('/')({
 
 const STACK_KEY = chapters.length + 1
 const GATE_KEY = chapters.length + 3 + featured.length
+const THREE_smooth = (x: number, a: number, b: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+  return t * t * (3 - 2 * t)
+}
+
 const NOGL_FILTERS = [
   'brightness(0.12) drop-shadow(0 0 2px #bfd9ff) drop-shadow(0 0 22px rgba(191,217,255,0.4))',
   'grayscale(1) invert(1) brightness(0.5) sepia(1) hue-rotate(175deg) saturate(2.4) contrast(1.4)',
@@ -46,7 +51,7 @@ function Hero() {
           alt=""
           width={720}
           height={666}
-          className="nogl-only pointer-events-none absolute right-[-6%] top-[9svh] w-[min(100vw,760px)] [filter:brightness(0.14)_drop-shadow(0_0_1px_#bfd9ff)_drop-shadow(0_0_24px_rgba(191,217,255,0.45))] [mask-image:linear-gradient(#000_70%,transparent)] sm:bottom-0 sm:right-[4%] sm:top-auto"
+          className="until-gl pointer-events-none absolute right-[-6%] top-[9svh] w-[min(100vw,760px)] [filter:brightness(0.14)_drop-shadow(0_0_1px_#bfd9ff)_drop-shadow(0_0_24px_rgba(191,217,255,0.45))] [mask-image:linear-gradient(#000_70%,transparent)] sm:bottom-0 sm:right-[4%] sm:top-auto"
         />
         <div className="relative max-w-[1100px]">
           <p className="mono mb-5 text-[var(--muted)]" data-reveal="fade" data-intro>
@@ -338,25 +343,32 @@ function Home() {
     if (!ref.current) return
     return startHomeDriver(ref.current, { stackKey: STACK_KEY, gateKey: GATE_KEY })
   }, [])
-  // One card on screen at a time: each card arrives with its section and leaves before the
-  // next one is read.
+  // One card on screen at a time, driven by the same smoothed key the 3D camera uses, so a
+  // card and its scene always arrive and leave together.
   useEffect(() => {
     const root = ref.current
     if (!root || prefersReducedMotion()) return
-    const ctx = gsap.context(() => {
-      root.querySelectorAll<HTMLElement>('[data-card]').forEach((card) => {
-        const section = card.closest('section')
-        if (!section) return
-        gsap
-          .timeline({
-            scrollTrigger: { trigger: section, start: 'top 75%', end: 'bottom 35%', scrub: 0.6, invalidateOnRefresh: true },
-          })
-          .fromTo(card, { opacity: 0, y: 48 }, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out' })
-          .to(card, { opacity: 1, duration: 0.64 })
-          .to(card, { opacity: 0, y: -36, duration: 0.18, ease: 'power2.in' })
-      })
-    }, root)
-    ScrollTrigger.refresh()
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-card]')].map((el) => ({
+      el,
+      k: Number(el.closest('section')?.dataset.key ?? -1),
+      o: -1,
+      y: 0,
+    }))
+    const html = document.documentElement
+    const off = onTick(() => {
+      const k = html.classList.contains('gl-on') ? story.kSmooth : story.k
+      for (const c of cards) {
+        const d = k - c.k
+        const o = 1 - THREE_smooth(Math.abs(d), 0.18, 0.46)
+        const y = -d * 70
+        if (Math.abs(o - c.o) < 0.002 && Math.abs(y - c.y) < 0.2) continue
+        c.o = o
+        c.y = y
+        c.el.style.opacity = o.toFixed(3)
+        c.el.style.translate = `0 ${y.toFixed(1)}px`
+        c.el.style.pointerEvents = o < 0.05 ? 'none' : ''
+      }
+    })
     // Keyboard: tabbing into a card brings its section to the reading position.
     const onFocus = (e: FocusEvent) => {
       const card = (e.target as HTMLElement).closest<HTMLElement>('[data-card]')
@@ -368,7 +380,12 @@ function Home() {
     root.addEventListener('focusin', onFocus)
     return () => {
       root.removeEventListener('focusin', onFocus)
-      ctx.revert()
+      off()
+      cards.forEach(({ el }) => {
+        el.style.opacity = ''
+        el.style.translate = ''
+        el.style.pointerEvents = ''
+      })
     }
   }, [])
   return (

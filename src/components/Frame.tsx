@@ -52,7 +52,7 @@ export function Frame() {
               </ForgeLink>
             </li>
             <li>
-              <ForgeLink to="/" scrollHash="contact" className="draw">
+              <ForgeLink to="/" scrollHash="contact" className="draw" activeOptions={{ includeHash: true }} activeProps={{ 'aria-current': undefined }}>
                 Contact
               </ForgeLink>
             </li>

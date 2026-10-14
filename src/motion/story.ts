@@ -25,6 +25,8 @@ export const story = {
   vel: 0,
   /** fly into the active gallery frame, 0..1 */
   fly: 0,
+  /** pointer is over the active gallery frame */
+  hover: 0,
 }
 
 export type Quality = 'high' | 'low'
