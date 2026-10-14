@@ -146,23 +146,29 @@ function Work() {
             </div>
           </div>
 
-          {/* no WebGL: the current cover on the stage */}
+          {/* the current cover on the stage until WebGL is ready (and for good without it) */}
           <img
             key={p.slug}
             src={p.image?.src ?? artDataUri(p.art, p.title)}
             alt={p.image?.alt ?? `System view of ${p.title}`}
             width={p.image?.w ?? 1600}
             height={p.image?.h ?? 1000}
-            className="nogl-only absolute left-1/2 top-[44%] aspect-[16/10] w-[min(86vw,620px)] -translate-x-1/2 -translate-y-1/2 border border-[var(--line)] object-cover object-top shadow-[0_0_0_1px_rgba(255,122,26,0.35),0_30px_80px_rgba(0,0,0,0.6)]"
+            className="until-gl absolute left-1/2 top-[44%] aspect-[16/10] w-[min(86vw,620px)] -translate-x-1/2 -translate-y-1/2 border border-[var(--line)] object-cover object-top shadow-[0_0_0_1px_rgba(255,122,26,0.35),0_30px_80px_rgba(0,0,0,0.6)]"
           />
           {/* hit area over the centre frame */}
           <button
             type="button"
-            className="gl-only absolute left-1/2 top-1/2 h-[38svh] w-[min(60vw,640px)] -translate-x-[40%] -translate-y-[52%] cursor-pointer max-md:-translate-x-1/2"
+            className="gl-only group absolute left-1/2 top-1/2 flex h-[38svh] w-[min(60vw,640px)] -translate-x-1/2 -translate-y-[52%] cursor-pointer items-end justify-center pb-3"
             onClick={() => open(p.slug)}
+            onPointerEnter={() => (story.hover = 1)}
+            onPointerLeave={() => (story.hover = 0)}
             aria-label={`Open case study: ${p.title}`}
             tabIndex={-1}
-          />
+          >
+            <span className="open-chip mono" aria-hidden="true">
+              Open case study →
+            </span>
+          </button>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52svh] bg-gradient-to-t from-[rgba(11,12,14,0.94)] via-[rgba(11,12,14,0.55)] to-transparent" aria-hidden="true" />
           <div className="relative grid items-end gap-8 md:grid-cols-12">

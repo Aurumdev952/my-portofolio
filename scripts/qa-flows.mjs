@@ -48,6 +48,34 @@ async function run(label, opts) {
   }
   check(p('story chapters advance'), labels.size >= 8 || opts.reducedMotion === 'reduce', `${labels.size} labels`)
 
+  // 2b. every story stop shows exactly its own card (cards follow the camera's key)
+  if (opts.reducedMotion !== 'reduce') {
+    const stops = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-card]')].map((c) => {
+        const s = c.closest('section')
+        const r = s.getBoundingClientRect()
+        return { key: s.dataset.key, y: r.top + window.scrollY + r.height / 2 - window.innerHeight / 2 }
+      }),
+    )
+    let bad = []
+    for (const st of stops) {
+      await page.evaluate((v) => window.scrollTo(0, v), st.y)
+      // software GL draws ~1 frame/s here: wait for frames to land, up to 8 s
+      let shown = []
+      for (let t = 0; t < 16; t++) {
+        await page.waitForTimeout(500)
+        shown = await page.evaluate(() =>
+          [...document.querySelectorAll('[data-card]')]
+            .filter((c) => parseFloat(getComputedStyle(c).opacity) > 0.5)
+            .map((c) => c.closest('section').dataset.key),
+        )
+        if (shown.length === 1 && shown[0] === st.key) break
+      }
+      if (shown.length !== 1 || shown[0] !== st.key) bad.push(`${st.key}:[${shown}]`)
+    }
+    check(p('one card per stop, matching the scene'), bad.length === 0, bad.length ? bad.join(' ') : `${stops.length} stops`)
+  }
+
   // 3. nav: Contact hash scroll on same page
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.waitForTimeout(400)

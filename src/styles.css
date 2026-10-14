@@ -111,17 +111,17 @@ img {
 }
 .skip-link {
   position: fixed;
-  left: var(--gutter);
+  left: 50%;
+  translate: -50% -200%;
   top: 12px;
   z-index: 200;
   padding: 10px 14px;
   background: var(--ink);
   color: var(--ground);
   font-weight: 600;
-  translate: 0 -200%;
 }
 .skip-link:focus-visible {
-  translate: 0 0;
+  translate: -50% 0;
 }
 
 /* ---------- links and buttons: one treatment per role ---------- */
@@ -256,6 +256,63 @@ img {
 .chip:focus-visible {
   color: var(--ink);
   background: rgba(255, 122, 26, 0.1);
+}
+
+/* Next project: a molten bar wipes under the title, the label heats, the arrow travels */
+.next-link {
+  position: relative;
+  padding-bottom: 14px;
+}
+.next-link__label {
+  transition: color 0.4s;
+}
+.next-link__arrow {
+  transition: translate 0.55s var(--ease-out), color 0.4s;
+}
+.next-link__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff5a0a, var(--heat), var(--heat-soft));
+  scale: 0 1;
+  transform-origin: left;
+  transition: scale 0.7s var(--ease-out);
+}
+@media (hover: hover) {
+  .next-link:hover .next-link__label,
+  .next-link:hover .next-link__arrow {
+    color: var(--heat);
+  }
+  .next-link:hover .next-link__arrow {
+    translate: 24px 0;
+  }
+  .next-link:hover .next-link__bar {
+    scale: 1 1;
+  }
+}
+.next-link:focus-visible .next-link__label {
+  color: var(--heat);
+}
+.next-link:focus-visible .next-link__bar {
+  scale: 1 1;
+}
+
+/* Open chip over the active gallery screen */
+.open-chip {
+  padding: 8px 12px;
+  background: var(--heat);
+  color: #120a04;
+  opacity: 0;
+  translate: 0 8px;
+  transition: opacity 0.3s, translate 0.45s var(--ease-out);
+}
+@media (hover: hover) {
+  .group:hover > .open-chip {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 /* Index rows: an orange tick leads, the row steps in */
@@ -530,6 +587,14 @@ html:not(.gl-try) .gl-only {
 }
 html.gl-try .nogl-only {
   display: none !important;
+}
+/* posters that hold the frame until the 3D has faded in */
+.until-gl {
+  transition: opacity 0.9s ease;
+}
+html.gl-on .until-gl {
+  opacity: 0;
+  pointer-events: none;
 }
 .gl-canvas {
   opacity: 0;

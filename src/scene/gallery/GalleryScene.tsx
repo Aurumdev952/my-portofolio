@@ -21,6 +21,7 @@ uniform float uHas;
 uniform float uActive;
 uniform float uDim;
 uniform float uNear;
+uniform float uHover;
 uniform float uTime;
 uniform vec2 uAspect; // plane aspect / image aspect
 varying vec2 vUv;
@@ -28,12 +29,13 @@ float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5); }
 void main(){
   // cover fit
   vec2 uv = (vUv - .5) * uAspect + .5;
-  vec3 col = uHas > .5 ? texture2D(uMap, uv).rgb : vec3(.07);
+  bool outside = uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1.;
+  vec3 col = uHas > .5 && !outside ? texture2D(uMap, uv).rgb : vec3(.055, .058, .066);
   float lum = dot(col, vec3(.299,.587,.114));
   // inactive frames read as cooled steel, the active one in full colour
   col = mix(vec3(lum) * vec3(.82,.88,1.), col, uActive);
   // neighbours stay readable as shapes, frames further round the ring fall into the dark
-  col *= mix(mix(.05, .2, uNear), 1., uActive) * (1. - uDim * .8);
+  col *= mix(mix(.05, .2, uNear), .9 + uHover * .1, uActive) * (1. - uDim * .8);
   float scan = .96 + .04 * sin(vUv.y * 700.);
   gl_FragColor = vec4(col * scan, 1.);
   #include <colorspace_fragment>
@@ -53,6 +55,7 @@ function Frame({ project, index }: { project: Project; index: number }) {
       uActive: { value: 0 },
       uDim: { value: 0 },
       uNear: { value: 0 },
+      uHover: { value: 0 },
       uTime: { value: 0 },
       uAspect: { value: new THREE.Vector2(1, 1) },
     }),
@@ -65,7 +68,10 @@ function Frame({ project, index }: { project: Project; index: number }) {
       const img = t.image as HTMLImageElement
       const ia = img.width / img.height
       const pa = W / H
-      uniforms.uAspect.value.set(pa > ia ? 1 : pa / ia, pa > ia ? ia / pa : 1)
+      // fit: fill the frame when shapes are close, letterbox wide images instead of cropping
+      const ratio = ia / pa
+      if (ratio > 1.15) uniforms.uAspect.value.set(1, ratio)
+      else uniforms.uAspect.value.set(pa > ia ? 1 : pa / ia, pa > ia ? ia / pa : 1)
       uniforms.uMap.value = t
       uniforms.uHas.value = 1
       setTex(t)
@@ -91,12 +97,17 @@ function Frame({ project, index }: { project: Project; index: number }) {
     uniforms.uActive.value += (active - uniforms.uActive.value) * (1 - Math.exp(-dt * 8))
     uniforms.uDim.value += ((match ? 0 : 1) - uniforms.uDim.value) * (1 - Math.exp(-dt * 6))
     uniforms.uTime.value = s.clock.elapsedTime
+    uniforms.uHover.value += (story.hover * uniforms.uActive.value - uniforms.uHover.value) * (1 - Math.exp(-dt * 10))
     if (group.current) {
-      const sc = 0.82 + uniforms.uActive.value * 0.18 - uniforms.uDim.value * 0.12
+      const sc = 0.82 + uniforms.uActive.value * 0.18 - uniforms.uDim.value * 0.12 + uniforms.uHover.value * 0.05
+      group.current.rotation.y = uniforms.uHover.value * story.px * 0.12
       group.current.scale.setScalar(sc)
       group.current.position.y = Math.sin(s.clock.elapsedTime * 0.5 + index) * 0.03
     }
-    if (edge.current) edge.current.opacity = 0.15 + uniforms.uActive.value * 0.85
+    if (edge.current) {
+      edge.current.opacity = 0.15 + uniforms.uActive.value * 0.85
+      edge.current.color.set(uniforms.uHover.value > 0.5 ? '#ffb46b' : '#ff7a1a')
+    }
   })
 
   const a = index * GALLERY.step
@@ -156,7 +167,7 @@ export function GalleryScene({ quality, onReady }: { quality: 'high' | 'low'; on
   return (
     <>
       <color attach="background" args={['#0b0c0e']} />
-      <fogExp2 attach="fog" args={['#0b0c0e', 0.07]} />
+      <fogExp2 attach="fog" args={['#0b0c0e', 0.045]} />
       <hemisphereLight args={['#9fb4d6', '#0b0c0e', 0.5]} />
       <pointLight position={[0, 4, 0]} intensity={10} distance={14} color="#dfe8ff" />
       <Environment resolution={64} frames={1} environmentIntensity={0.5}>

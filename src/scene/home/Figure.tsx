@@ -130,8 +130,9 @@ void main(){
   float edge = 1. - smoothstep(0., .05, dn - cut);
   col += heatRamp(.8) * edge * step(.001, dis) * 2.2;
 
-  // feathered silhouette edge
-  gl_FragColor = vec4(col, edgeA);
+  // feathered silhouette edge; the bust melts into its pedestal instead of a hard crop
+  float base = smoothstep(0.0, 0.1, vUv.y);
+  gl_FragColor = vec4(col * mix(0.35, 1., base), edgeA * mix(0.0, 1., smoothstep(0.0, 0.05, vUv.y)));
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
