@@ -24,6 +24,10 @@ function luminance(hex: string) {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
 }
 
+let resolveAtlas: () => void = () => {}
+/** resolves once the logo atlas is drawn (HomeScene re-warms shaders after it) */
+export const atlasReady = new Promise<void>((r) => (resolveAtlas = r))
+
 async function buildAtlas(): Promise<THREE.CanvasTexture> {
   const rows = Math.ceil(stackItems.length / COLS)
   const c = document.createElement('canvas')
@@ -99,7 +103,10 @@ export function Conveyor() {
 
   useEffect(() => {
     let alive = true
-    buildAtlas().then((t) => alive && setAtlas(t))
+    buildAtlas().then((t) => {
+      if (alive) setAtlas(t)
+      requestAnimationFrame(() => resolveAtlas())
+    })
     return () => {
       alive = false
     }
