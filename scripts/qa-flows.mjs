@@ -99,8 +99,9 @@ async function run(label, opts) {
   check(p('case study opens'), !!caseH1, caseH1)
 
   // 8. next project link + back to gallery + browser back
+  const urlBefore = page.url()
   await page.getByRole('navigation', { name: 'Next project' }).getByRole('link').first().click()
-  await page.waitForTimeout(400)
+  await page.waitForURL((u) => u.toString() !== urlBefore, { timeout: 15000 })
   await doorsOpen()
   await page.waitForTimeout(1000)
   const caseH1b = await page.evaluate(() => document.querySelector('h1')?.textContent)
