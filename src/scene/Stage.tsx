@@ -165,21 +165,34 @@ function Governor({ max, onDpr }: { max: number; onDpr: (d: number) => void }) {
     let fastMs = 0
     let coolMs = 0
     let last = performance.now()
+    let settleMs = 1000
     const tick = () => {
       const now = performance.now()
       const dt = now - last
       last = now
       if (dt > 1500 || document.hidden) return // returning from a hidden tab, not a trend
+      // The start-up (scene warm-up, doors opening, intro text) is a one-off cost, not the
+      // device's real speed: only judge frames once it is over.
+      if (!useUI.getState().glReady || !document.documentElement.classList.contains('is-loaded')) {
+        settleMs = 1000
+        gov.ema = 16.7
+        return
+      }
+      if (settleMs > 0) {
+        settleMs -= dt
+        return
+      }
       gov.ema += (Math.min(dt, 120) - gov.ema) * 0.12
       if (coolMs > 0) {
         coolMs -= dt
         return
       }
-      // running under ~45 fps for 0.75 s: step down; over ~70 fps headroom for 4 s: step up
+      // running under ~45 fps for 0.75 s: step down; headroom over ~70 fps: step up, sooner
+      // the more headroom there is, so a device that dipped once gets its sharpness back fast
       slowMs = gov.ema > 22 ? slowMs + dt : 0
       fastMs = gov.ema < 14 ? fastMs + dt : 0
       if (slowMs > 750 && gov.level < steps.length - 1) gov.level++
-      else if (fastMs > 4000 && gov.level > 0) gov.level--
+      else if (fastMs > (gov.ema < 9 ? 1200 : 3000) && gov.level > 0) gov.level--
       else return
       slowMs = fastMs = 0
       coolMs = 500
