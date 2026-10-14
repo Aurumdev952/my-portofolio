@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://benjamin-ishimwe.vercel.app/sitemap.xml
+Sitemap: https://ishbenjamin.is-a.dev/sitemap.xml

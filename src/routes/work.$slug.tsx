@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useRef } from 'react'
 import { projects, site, stack } from '#/content/site'
+import { share } from '#/content/seo'
 import type { ProjectArt } from '#/content/site'
 import { ForgeLink } from '#/components/ForgeLink'
 import { Logo } from '#/components/Logo'
@@ -27,9 +28,14 @@ export const Route = createFileRoute('/work/$slug')({
       meta: [
         { title: `${p.title} · ${site.name}` },
         { name: 'description', content: `${p.summary} ${p.role} at ${p.org}.`.slice(0, 160) },
-        { property: 'og:title', content: `${p.title} · ${site.name}` },
-        { property: 'og:description', content: p.summary },
-        { property: 'og:url', content: `${site.url}/work/${p.slug}` },
+        ...share({
+          title: `${p.title} · ${site.name}`,
+          description: p.summary,
+          path: `/work/${p.slug}`,
+          image: `/og/${p.slug}.jpg`,
+          imageAlt: `${p.title}: ${p.summary}`,
+          type: 'article',
+        }),
       ],
       links: [{ rel: 'canonical', href: `${site.url}/work/${p.slug}` }],
     }

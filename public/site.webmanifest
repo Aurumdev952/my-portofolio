@@ -1,0 +1,14 @@
+{
+  "name": "Ishimwe Mugisha Benjamin",
+  "short_name": "Benjamin",
+  "description": "Software engineer in Kigali. Real time backends, data pipelines, Kubernetes and RAG systems.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

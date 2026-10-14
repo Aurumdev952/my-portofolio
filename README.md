@@ -50,6 +50,10 @@ pnpm assets   # portrait cut out + depth map, screenshots of the public project 
 - `scripts/prepare-portrait.mjs` reads `assets-src/portrait.jpg`, removes the background
   (BiRefNet) and estimates depth (Depth Anything v2), writing `public/portrait/*.webp`.
 - `scripts/shoot-sites.mjs` captures tujyaneltd.com, uwera.rw and uzabox.com.
+- `pnpm og` builds the link preview cards (`public/og.jpg`, `public/og/<slug>.jpg`, 1200x630,
+  under 300 KB for WhatsApp) and the icons. The home card renders the live hero, so run
+  the production server on :4400 first; `--cards` skips it. Re-run after changing a
+  project's title or summary.
 - `scripts/qa-shots.mjs` screenshots every story key. Add `?qa` to any URL to make the
   camera snap to its target, which helps in slow software WebGL.
 
