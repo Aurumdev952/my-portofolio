@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '#/motion/engine'
 import { openDoors, skipLoader } from '#/motion/doors'
+import { LATE_MS, playIntro } from '#/motion/reveal'
 import { useUI } from '#/motion/story'
 
 const MIN_MS = 800
@@ -12,11 +13,36 @@ export function Doors() {
   const beadRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (document.documentElement.classList.contains('skip-loader')) {
+    const html = document.documentElement
+    const el = document.getElementById('loader')
+    if (html.classList.contains('skip-loader')) {
       useUI.getState().setLoaded(true)
       skipLoader()
       return
     }
+    if (html.classList.contains('late-boot') || performance.now() > LATE_MS) {
+      // The CSS fallback is already opening the doors: let it finish, then hand over.
+      html.classList.add('is-loaded')
+      useUI.getState().setLoaded(true)
+      // if the page registered its intro just before the cut-off, play it with the doors
+      const intro = window.setTimeout(playIntro, 300)
+      const handOver = () => {
+        if (!el || el.hidden) return
+        el.hidden = true
+        el.dataset.js = '1'
+        el.dataset.state = 'open'
+        el.dataset.mode = 'transition'
+      }
+      const leaf = el?.querySelector('.doors__leaf--l')
+      leaf?.addEventListener('animationend', handOver, { once: true })
+      const id = window.setTimeout(handOver, 2600)
+      return () => {
+        window.clearTimeout(id)
+        window.clearTimeout(intro)
+        leaf?.removeEventListener('animationend', handOver)
+      }
+    }
+    if (el) el.dataset.js = '1'
     const start = performance.now()
     let fontsDone = false
     let imagesDone = 0

@@ -24,6 +24,8 @@ function onIntro(fn: () => void) {
 }
 
 const HOT = '#ffb46b'
+/** after this, the CSS fallback has started opening the doors and showing the intro */
+export const LATE_MS = 1200
 
 /**
  * Forge reveal: text lines strike up from below glowing hot, then cool to ink.
@@ -45,7 +47,11 @@ export function useReveal(root: RefObject<HTMLElement | null>, deps: unknown[] =
     const offs: (() => void)[] = []
     const ctx = gsap.context(() => {
       // Inner pages opened directly already show their intro content: leave it in place.
-      const skipIntro = document.documentElement.classList.contains('no-intro')
+      // Same when the scripts arrived after the CSS fallback already revealed the hero.
+      const html = document.documentElement
+      if (!html.classList.contains('is-loaded') && performance.now() > LATE_MS) html.classList.add('no-intro', 'late-boot')
+      else html.classList.add('intro-js')
+      const skipIntro = html.classList.contains('no-intro')
       el.querySelectorAll<HTMLElement>('[data-split]').forEach((node) => {
         if (skipIntro && node.hasAttribute('data-intro')) return
         const delay = Number(node.dataset.delay ?? 0)
