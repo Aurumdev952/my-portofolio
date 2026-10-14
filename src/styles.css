@@ -245,17 +245,17 @@ img {
 }
 @media (hover: hover) {
   .chip:hover {
-    color: var(--ink);
+    color: #120a04;
     border-color: var(--heat);
-    background: rgba(255, 122, 26, 0.1);
+    background: var(--heat);
   }
   .chip:hover::after {
     scale: 1 1;
   }
 }
 .chip:focus-visible {
-  color: var(--ink);
-  background: rgba(255, 122, 26, 0.1);
+  color: #120a04;
+  background: var(--heat);
 }
 
 /* Next project: a molten bar wipes under the title, the label heats, the arrow travels */
